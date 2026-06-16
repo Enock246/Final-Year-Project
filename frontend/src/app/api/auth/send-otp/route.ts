@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { Resend } from 'resend';
 
 export async function POST(request: Request) {
@@ -10,12 +10,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    const supabaseAdmin = createAdminClient();
+
+    // Rate Limiting (max 3 requests per minute)
+    const { data: isAllowed, error: rateLimitError } = await supabaseAdmin.rpc('check_otp_rate_limit', {
+      user_email: email,
+      max_requests: 3,
+      window_minutes: 1
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit checking error:', rateLimitError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    if (!isAllowed) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a minute before trying again.' }, { status: 429 });
+    }
+
     // Generate a 6-digit code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Store in Supabase
-    const supabase = await createClient();
-    const { error: dbError } = await supabase
+    // Store securely via Admin client
+    const { error: dbError } = await supabaseAdmin
       .from('email_otps')
       .insert({ email, otp });
 

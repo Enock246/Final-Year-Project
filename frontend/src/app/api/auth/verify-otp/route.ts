@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function POST(request: Request) {
   try {
@@ -9,10 +9,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and OTP are required' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabaseAdmin = createAdminClient();
     
-    // Check if the OTP is valid and not expired
-    const { data, error } = await supabase
+    // Check if the OTP is valid and not expired securely via Admin Client
+    const { data, error } = await supabaseAdmin
       .from('email_otps')
       .select('*')
       .eq('email', email)
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid or expired code' }, { status: 400 });
     }
 
-    // Delete the used OTP
-    await supabase
+    // Delete the used OTP securely
+    await supabaseAdmin
       .from('email_otps')
       .delete()
       .eq('id', data[0].id);
