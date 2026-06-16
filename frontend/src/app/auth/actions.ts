@@ -40,7 +40,7 @@ export async function signInWithProtection(formData: FormData) {
 
   if (error) {
     await supabase.rpc('increment_failed_login', { user_email: email });
-    return { error: 'Invalid credentials' };
+    return { error: error.message || 'Invalid credentials' };
   }
 
   await supabase.rpc('reset_failed_login', { user_email: email });
