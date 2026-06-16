@@ -68,14 +68,13 @@ export default function TransportSetupPage() {
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     const percentage = x / rect.width;
     
-    // Values: 15 to 120 minutes
-    const min = 15;
+    // Values: 1 to 120 minutes
+    const min = 1;
     const max = 120;
     let newValue = Math.round(min + percentage * (max - min));
     
-    // Snap to 15 min intervals
-    newValue = Math.round(newValue / 15) * 15;
-    setMaxCommute(Math.max(15, Math.min(120, newValue)));
+    // Smooth 1-minute intervals
+    setMaxCommute(Math.max(1, Math.min(120, newValue)));
   };
 
   useEffect(() => {
@@ -105,7 +104,7 @@ export default function TransportSetupPage() {
   const isValid = transportMode !== '';
   
   const formatTime = (mins: number) => {
-    if (mins < 60) return `${mins} mins`;
+    if (mins < 60) return `${mins} min${mins !== 1 ? 's' : ''}`;
     if (mins === 60) return `1 hour`;
     if (mins === 120) return `2+ hours`;
     const h = Math.floor(mins / 60);
@@ -113,7 +112,7 @@ export default function TransportSetupPage() {
     return m === 0 ? `${h} hrs` : `${h}h ${m}m`;
   };
 
-  const sliderPercentage = ((maxCommute - 15) / (120 - 15)) * 100;
+  const sliderPercentage = ((maxCommute - 1) / (120 - 1)) * 100;
 
   // Stripe Classes
   const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
@@ -230,7 +229,7 @@ export default function TransportSetupPage() {
                 </div>
                 
                 <div className="flex justify-between mt-3 text-[11px] font-medium text-ink-mute">
-                  <span>15 mins</span>
+                  <span>1 min</span>
                   <span>2+ hours</span>
                 </div>
               </div>
