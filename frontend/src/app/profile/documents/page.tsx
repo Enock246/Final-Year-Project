@@ -232,13 +232,12 @@ export default function DocumentsSetupPage() {
     const isProcessing = doc?.isProcessing;
 
     return (
-      <button 
+      <div 
         onClick={() => !doc && !isProcessing && fileInputRefs[type].current?.click()}
-        disabled={!!doc && !isProcessing}
         className={`w-full p-4 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-center min-h-[90px] ${
           doc && !isProcessing
             ? 'bg-canvas border border-input shadow-sm' 
-            : 'bg-primary-subdued/10 border border-dashed border-primary/30 hover:bg-primary-subdued/30 hover:border-primary/50'
+            : 'bg-primary-subdued/10 border border-dashed border-primary/30 hover:bg-primary-subdued/30 hover:border-primary/50 cursor-pointer'
         }`}
       >
         <div className="flex items-start justify-between w-full">
@@ -318,7 +317,7 @@ export default function DocumentsSetupPage() {
             />
           )}
         </AnimatePresence>
-      </button>
+      </div>
     );
   };
 
