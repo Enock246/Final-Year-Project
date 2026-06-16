@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { MapPin, Navigation, ChevronRight, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Navigation, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react';
 import regionsData from '@/data/regions.json';
 import { useRouter } from 'next/navigation';
 
@@ -114,17 +114,24 @@ export default function LocationSetupPage() {
 
   const isValid = selectedRegion && selectedDistrict && townCity.length > 2;
 
+  // Stripe Classes
+  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
+  const inputClassName = "w-full h-10 px-3 rounded-sm border border-input bg-canvas text-ink text-[14px] font-normal focus:outline-none focus:border-primary transition-all";
+  const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
+
   return (
-    <main className="flex-1 flex flex-col p-6 bg-zinc-50">
+    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
       <div className="w-full max-w-md mx-auto mt-8 flex-1">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+          className={cardClassName}
         >
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Where do you live?</h1>
+              <span className="text-[12px] font-semibold text-primary mb-2 block tracking-widest uppercase">Step 1 of 3</span>
+              <h1 className="heading-lg text-ink mb-1">Where do you live?</h1>
             </div>
             
             <button 
@@ -133,18 +140,18 @@ export default function LocationSetupPage() {
                 await supabase.auth.signOut();
                 router.push('/');
               }}
-              className="text-xs font-medium text-zinc-500 hover:text-black transition-colors pressable"
+              className="text-[13px] font-medium text-ink-mute hover:text-ink transition-colors"
             >
               Sign Out
             </button>
           </div>
-          <p className="text-zinc-500 text-sm mb-8 text-balance">
+          <p className="body-md text-ink-mute mb-8 text-balance">
             We'll use this to find nearby schools and calculate the best transportation routes.
           </p>
 
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Region</label>
+          <div className="space-y-5">
+            <div>
+              <label className={labelClassName}>Region</label>
               <div className="relative">
                 <select
                   value={selectedRegion}
@@ -152,96 +159,120 @@ export default function LocationSetupPage() {
                     setSelectedRegion(e.target.value);
                     setSelectedDistrict('');
                   }}
-                  className="w-full h-12 px-4 appearance-none rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  className={`${inputClassName} appearance-none pr-10 ${!selectedRegion && 'text-ink-mute'}`}
                 >
                   <option value="" disabled>Select Region</option>
                   {regionsData.map((r) => (
                     <option key={r.name} value={r.name}>{r.name}</option>
                   ))}
                 </select>
-                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                  <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <svg className="w-4 h-4 text-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">District</label>
+            <div>
+              <label className={labelClassName}>District</label>
               <div className="relative">
                 <select
                   value={selectedDistrict}
                   onChange={(e) => setSelectedDistrict(e.target.value)}
                   disabled={!selectedRegion}
-                  className="w-full h-12 px-4 appearance-none rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all disabled:opacity-50"
+                  className={`${inputClassName} appearance-none pr-10 disabled:opacity-50 disabled:bg-canvas-soft ${!selectedDistrict && 'text-ink-mute'}`}
                 >
                   <option value="" disabled>Select District</option>
                   {activeDistricts.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
-                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                  <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <svg className="w-4 h-4 text-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Town/City</label>
+            <div>
+              <label className={labelClassName}>Town or City</label>
               <input
                 type="text"
                 value={townCity}
                 onChange={(e) => setTownCity(e.target.value)}
                 placeholder="e.g. Sunyani"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className={inputClassName}
               />
             </div>
             
             <div className="pt-2">
               <button
                 onClick={handleDetectLocation}
-                disabled={isDetecting}
-                className={`w-full h-12 rounded-xl border border-gray-200 text-black font-medium text-sm transition-all flex items-center justify-center gap-2 mt-2 ${isDetecting ? 'bg-zinc-100 animate-pulse cursor-wait opacity-80 text-zinc-500' : 'bg-white hover:bg-zinc-50 pressable'}`}
+                disabled={isDetecting || !!locationDetected}
+                className={`w-full h-10 rounded-sm font-medium text-[13px] transition-all flex items-center justify-center gap-2 ${
+                  locationDetected 
+                    ? 'bg-primary-subdued text-primary-deep cursor-default border border-transparent'
+                    : isDetecting 
+                      ? 'bg-canvas-soft text-ink-mute border border-input cursor-wait' 
+                      : 'bg-white hover:bg-canvas-soft text-ink border border-input shadow-sm'
+                }`}
               >
-                {isDetecting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                {locationDetected ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Location Detected
+                  </>
+                ) : isDetecting ? (
+                  <>
+                    <MapPin className="w-4 h-4 animate-bounce" />
+                    Detecting...
+                  </>
                 ) : (
-                  <Navigation className="w-4 h-4" />
+                  <>
+                    <Navigation className="w-4 h-4 text-primary" />
+                    Auto-detect my location
+                  </>
                 )}
-                {isDetecting ? 'Detecting Location...' : 'Use My Current Location'}
               </button>
             </div>
 
-            {locationDetected && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }} 
-                animate={{ opacity: 1, height: 'auto' }} 
-                className="flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 px-4 py-3 rounded-xl border border-green-100 mt-4"
-              >
-                <MapPin className="w-4 h-4" />
-                ✓ Location detected: {locationDetected.town}, {locationDetected.region}
-              </motion.div>
-            )}
-
+            <AnimatePresence>
+              {locationDetected && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: 'auto' }} 
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-start gap-3 p-3 bg-primary-subdued/30 border border-primary-subdued rounded-sm mt-1">
+                    <div className="mt-0.5">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-primary-deep leading-tight mb-0.5">We found you!</p>
+                      <p className="text-[12px] text-primary-deep/80 leading-tight">
+                        Mapped to {locationDetected.town}, {locationDetected.region}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="mt-10">
+          <div className="mt-8">
             <button
               onClick={handleNext}
               disabled={!isValid || isSaving}
-              className="w-full bg-black text-white h-12 rounded-xl font-medium text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 pressable mt-6"
+              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary shadow-sm"
             >
               {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  Next
+                  Continue
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}
