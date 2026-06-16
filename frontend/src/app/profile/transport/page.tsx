@@ -136,7 +136,6 @@ export default function TransportSetupPage() {
           </button>
           
           <div className="mb-2">
-            <span className="text-[12px] font-semibold text-primary mb-2 block tracking-widest uppercase">Step 2 of 3</span>
             <h1 className="heading-lg text-ink mb-1">Transportation</h1>
           </div>
           <p className="body-md text-ink-mute mb-8 text-balance">
@@ -237,6 +236,11 @@ export default function TransportSetupPage() {
           </div>
 
           <div className="mt-10">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[13px] text-ruby min-h-[20px] transition-opacity">
+                {!isValid ? "Please select a transport mode to continue." : ""}
+              </span>
+            </div>
             <button
               onClick={handleNext}
               disabled={!isValid || isSaving}

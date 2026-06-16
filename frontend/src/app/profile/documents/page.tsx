@@ -151,7 +151,7 @@ export default function DocumentsSetupPage() {
       setLoadingStep(4);
 
       await new Promise(r => setTimeout(r, 800));
-      router.push('/dashboard');
+      router.push('/profile/complete');
     } catch (err: any) {
       console.error('Upload error:', err);
       
@@ -166,7 +166,7 @@ export default function DocumentsSetupPage() {
         await new Promise(r => setTimeout(r, 800));
         setLoadingStep(4);
         await new Promise(r => setTimeout(r, 800));
-        router.push('/dashboard');
+        router.push('/profile/complete');
       } else {
         alert('Failed to upload documents. Please try again. ' + (err.message || ''));
         setIsUploading(false);
@@ -339,7 +339,6 @@ export default function DocumentsSetupPage() {
           </button>
           
           <div className="mb-2">
-            <span className="text-[12px] font-semibold text-primary mb-2 block tracking-widest uppercase">Step 3 of 3</span>
             <h1 className="heading-lg text-ink mb-1">Upload Documents</h1>
           </div>
           <p className="body-md text-ink-mute mb-8 text-balance flex items-center gap-1.5">
@@ -380,6 +379,11 @@ export default function DocumentsSetupPage() {
           </div>
 
           <div className="mt-10">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[13px] text-ruby min-h-[20px] transition-opacity">
+                {!isValid ? "Please upload the required documents to continue." : ""}
+              </span>
+            </div>
             <button
               onClick={handleComplete}
               disabled={!isValid}

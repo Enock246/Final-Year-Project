@@ -130,7 +130,6 @@ export default function LocationSetupPage() {
         >
           <div className="flex justify-between items-start mb-2">
             <div>
-              <span className="text-[12px] font-semibold text-primary mb-2 block tracking-widest uppercase">Step 1 of 3</span>
               <h1 className="heading-lg text-ink mb-1">Where do you live?</h1>
             </div>
             
@@ -263,6 +262,11 @@ export default function LocationSetupPage() {
           </div>
 
           <div className="mt-8">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[13px] text-ruby min-h-[20px] transition-opacity">
+                {!isValid ? "Please complete all required fields." : ""}
+              </span>
+            </div>
             <button
               onClick={handleNext}
               disabled={!isValid || isSaving}
