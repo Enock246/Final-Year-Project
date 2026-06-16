@@ -25,22 +25,27 @@ export async function POST(request: Request) {
     }
 
     // Send email using Resend
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    
-    const { error: emailError } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: email,
-      subject: 'Your InternConnect Verification Code',
-      html: `
-        <h2>Confirm your email address</h2>
-        <p>Welcome to InternConnect! Please use the following 6-digit code to verify your email address and finish signing up:</p>
-        <h1 style="letter-spacing: 0.25em; padding: 20px; background-color: #f4f4f5; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold;">${otp}</h1>
-      `,
-    });
+    if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const { error: emailError } = await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: email,
+        subject: 'Your InternConnect Verification Code',
+        html: `
+          <h2>Confirm your email address</h2>
+          <p>Welcome to InternConnect! Please use the following 6-digit code to verify your email address and finish signing up:</p>
+          <h1 style="letter-spacing: 0.25em; padding: 20px; background-color: #f4f4f5; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold;">${otp}</h1>
+        `,
+      });
 
-    if (emailError) {
-      console.error('Resend error:', emailError);
-      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
+      if (emailError) {
+        console.error('Resend error:', emailError);
+        return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
+      }
+    } else {
+      console.log('\n=============================================');
+      console.log(`[DEV MODE] OTP for ${email}: ${otp}`);
+      console.log('=============================================\n');
     }
 
     return NextResponse.json({ success: true });
