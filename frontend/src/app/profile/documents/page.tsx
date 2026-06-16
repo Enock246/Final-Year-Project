@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, CheckCircle2, X, File, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, File, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
@@ -12,6 +12,7 @@ interface UploadedDoc {
   file: File;
   name: string;
   size: number;
+  isProcessing?: boolean;
 }
 
 export default function DocumentsSetupPage() {
@@ -34,16 +35,16 @@ export default function DocumentsSetupPage() {
   };
 
   const loadingMessages = [
-    'Documents uploaded',
+    'Documents uploaded securely',
     'Analyzing your preferences',
-    'Finding your best matches',
+    'Generating your unique profile',
     'Ready to go!'
   ];
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
-  const handleFileChange = (type: DocumentType, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (type: DocumentType, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -58,12 +59,27 @@ export default function DocumentsSetupPage() {
         return;
       }
 
+      // Start simulated processing animation
       setDocs(prev => ({
         ...prev,
         [type]: {
           file,
           name: file.name,
           size: file.size,
+          isProcessing: true,
+        }
+      }));
+
+      // Simulate a deliberate "scanning" delay to feel secure
+      await new Promise(r => setTimeout(r, 1200));
+
+      setDocs(prev => ({
+        ...prev,
+        [type]: {
+          file,
+          name: file.name,
+          size: file.size,
+          isProcessing: false,
         }
       }));
     }
@@ -95,7 +111,7 @@ export default function DocumentsSetupPage() {
       const paths: Record<string, string> = {};
       
       for (const type of ['cv', 'transcript', 'placement'] as DocumentType[]) {
-        if (docs[type]) {
+        if (docs[type] && !docs[type]?.isProcessing) {
           const file = docs[type]!.file;
           const fileExt = file.name.split('.').pop();
           const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
@@ -158,50 +174,54 @@ export default function DocumentsSetupPage() {
     }
   };
 
-  const isValid = docs.cv !== null && docs.transcript !== null;
+  const isValid = docs.cv !== null && !docs.cv.isProcessing && 
+                  docs.transcript !== null && !docs.transcript.isProcessing;
+
+  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
 
   if (isUploading) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-50">
-        <div className="w-full max-w-sm space-y-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-canvas-soft min-h-screen">
+        <div className={cardClassName + " space-y-6"}>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-            className="text-center mb-8"
+            className="text-left mb-8"
           >
-            <h2 className="text-xl font-semibold text-zinc-900 flex items-center justify-center gap-2 tracking-tight">
-              Setting up your profile
-            </h2>
+            <h2 className="heading-lg text-ink">Completing Setup</h2>
+            <p className="body-md text-ink-mute">Please wait while we finalize your account.</p>
           </motion.div>
 
-          {loadingMessages.map((stepMsg, index) => (
-            <AnimatePresence key={index}>
-              {loadingStep >= index && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
-                  className="flex items-center gap-4 text-sm font-medium text-zinc-900 bg-white p-4 rounded-xl border border-gray-200 shadow-sm"
-                >
-                  {loadingStep > index ? (
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-black"
-                    >
-                      <CheckCircle2 className="w-5 h-5 stroke-[2]" />
-                    </motion.div>
-                  ) : (
-                    <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-                  )}
-                  <span className={loadingStep > index ? 'text-zinc-900' : 'text-zinc-500'}>
-                    {stepMsg}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          ))}
+          <div className="space-y-4">
+            {loadingMessages.map((stepMsg, index) => (
+              <AnimatePresence key={index}>
+                {loadingStep >= index && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+                    className="flex items-center gap-4 text-[14px] font-medium text-ink bg-canvas-soft p-4 rounded-md border border-input"
+                  >
+                    {loadingStep > index ? (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-primary"
+                      >
+                        <CheckCircle2 className="w-5 h-5 stroke-[2]" />
+                      </motion.div>
+                    ) : (
+                      <Loader2 className="w-5 h-5 animate-spin text-ink-mute" />
+                    )}
+                    <span className={loadingStep > index ? 'text-ink' : 'text-ink-mute'}>
+                      {stepMsg}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            ))}
+          </div>
         </div>
       </main>
     );
@@ -209,59 +229,73 @@ export default function DocumentsSetupPage() {
 
   const FileUploadBox = ({ title, type, isRequired, icon: Icon }: { title: string, type: DocumentType, isRequired: boolean, icon: any }) => {
     const doc = docs[type];
+    const isProcessing = doc?.isProcessing;
 
     return (
-      <div className={`p-5 rounded-xl border transition-all ${doc ? 'bg-zinc-50 border-black' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
-            <div className={`p-2.5 rounded-lg border ${doc ? 'bg-white border-gray-200 text-black' : 'bg-zinc-50 border-gray-100 text-zinc-500'}`}>
-              <Icon className="w-5 h-5 stroke-[1.5]" />
+      <button 
+        onClick={() => !doc && !isProcessing && fileInputRefs[type].current?.click()}
+        disabled={!!doc && !isProcessing}
+        className={`w-full p-4 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-center min-h-[90px] ${
+          doc && !isProcessing
+            ? 'bg-canvas border border-input shadow-sm' 
+            : 'bg-primary-subdued/10 border border-dashed border-primary/30 hover:bg-primary-subdued/30 hover:border-primary/50'
+        }`}
+      >
+        <div className="flex items-start justify-between w-full">
+          <div className="flex items-start gap-3 w-full">
+            <div className={`p-2 rounded-sm shrink-0 transition-colors ${doc && !isProcessing ? 'bg-primary-subdued text-primary-deep' : 'bg-canvas border border-input text-primary'}`}>
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              ) : doc ? (
+                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              ) : (
+                <Icon className="w-4 h-4 stroke-[2]" />
+              )}
             </div>
-            <div>
-              <h3 className="font-semibold text-sm text-zinc-900 flex items-center gap-2">
+            
+            <div className="flex-1 min-w-0 pr-4">
+              <h3 className="font-semibold text-[14px] text-ink flex items-center gap-1.5 leading-tight mb-0.5">
                 {title}
-                {isRequired && <span className="text-red-500">*</span>}
-                {doc && <CheckCircle2 className="w-3.5 h-3.5 text-black stroke-[2]" />}
+                {isRequired && <span className="text-ruby">*</span>}
               </h3>
               
               {!doc ? (
-                <p className="text-xs text-zinc-500 mt-1">PDF or Word document</p>
+                <p className="text-[12px] text-ink-mute">PDF or Word doc (Max 5MB)</p>
+              ) : isProcessing ? (
+                <p className="text-[12px] text-primary font-medium animate-pulse">Scanning document...</p>
               ) : (
-                <div className="mt-1 space-y-0.5">
-                  <p className="text-xs font-medium text-zinc-700 truncate max-w-[180px]">
+                <div className="flex items-center gap-2">
+                  <p className="text-[12px] font-medium text-ink-secondary truncate max-w-[140px]">
                     {doc.name}
                   </p>
-                  <p className="text-[11px] text-zinc-400">
-                    {(doc.size / 1024).toFixed(1)} KB
-                  </p>
+                  <span className="text-[11px] text-ink-mute shrink-0">
+                    {(doc.size / 1024).toFixed(0)} KB
+                  </span>
                 </div>
               )}
             </div>
           </div>
           
-          <div className="flex flex-col gap-2 items-end">
+          <div className="shrink-0 flex items-center">
             {!doc ? (
-              <button 
-                onClick={() => fileInputRefs[type].current?.click()}
-                className="text-xs font-medium text-black bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded-md transition-colors"
-              >
+              <span className="text-[12px] font-semibold text-primary bg-primary-subdued px-3 py-1.5 rounded-sm">
                 Upload
-              </button>
-            ) : (
-              <>
-                <button 
-                  onClick={() => fileInputRefs[type].current?.click()}
-                  className="text-[11px] font-medium text-zinc-500 hover:text-black transition-colors"
+              </span>
+            ) : !isProcessing && (
+              <div className="flex flex-col gap-1.5">
+                <span 
+                  onClick={(e) => { e.stopPropagation(); fileInputRefs[type].current?.click(); }}
+                  className="text-[11px] font-medium text-ink-mute hover:text-ink transition-colors cursor-pointer text-right"
                 >
                   Replace
-                </button>
-                <button 
-                  onClick={() => removeFile(type)}
-                  className="text-[11px] font-medium text-red-500 hover:text-red-600 transition-colors"
+                </span>
+                <span 
+                  onClick={(e) => { e.stopPropagation(); removeFile(type); }}
+                  className="text-[11px] font-medium text-ruby hover:text-ruby-press transition-colors cursor-pointer text-right"
                 >
                   Remove
-                </button>
-              </>
+                </span>
+              </div>
             )}
             <input 
               type="file" 
@@ -272,35 +306,49 @@ export default function DocumentsSetupPage() {
             />
           </div>
         </div>
-      </div>
+
+        {/* Processing progress bar overlay */}
+        <AnimatePresence>
+          {isProcessing && (
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 1.2, ease: "linear" }}
+              className="absolute bottom-0 left-0 h-0.5 bg-primary"
+            />
+          )}
+        </AnimatePresence>
+      </button>
     );
   };
 
   return (
-    <main className="flex-1 flex flex-col p-6 bg-zinc-50">
+    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
       <div className="w-full max-w-md mx-auto mt-8 flex-1">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+          className={cardClassName}
         >
           <button 
             onClick={handleBack}
-            className="flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-black mb-6 transition-colors pressable"
+            className="flex items-center gap-1 text-[13px] font-medium text-ink-mute hover:text-ink mb-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </button>
+          
           <div className="mb-2">
-            <span className="text-xs font-semibold text-zinc-500 mb-2 block tracking-wider uppercase">Step 3 of 3</span>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Upload Documents</h1>
+            <span className="text-[12px] font-semibold text-primary mb-2 block tracking-widest uppercase">Step 3 of 3</span>
+            <h1 className="heading-lg text-ink mb-1">Upload Documents</h1>
           </div>
-          <p className="text-zinc-500 mb-8 text-sm text-balance flex items-center gap-2">
-            <Upload className="w-4 h-4 stroke-[1.5]" />
-            These will be attached to your applications.
+          <p className="body-md text-ink-mute mb-8 text-balance flex items-center gap-1.5">
+            <Upload className="w-4 h-4 text-ink-mute" />
+            Attach your official files below.
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <FileUploadBox 
               title="Curriculum Vitae (CV)" 
               type="cv" 
@@ -320,9 +368,14 @@ export default function DocumentsSetupPage() {
               icon={FileText} 
             />
             
-            <div className="bg-zinc-100 rounded-xl p-4 border border-zinc-200 mt-6">
-              <p className="text-xs text-zinc-600 leading-relaxed">
-                <span className="font-semibold text-black">Tip:</span> Clear, readable documents give schools confidence in your application. Ensure all pages are scanned properly.
+            <div className="bg-primary-subdued/50 rounded-sm p-4 mt-8 flex items-start gap-3">
+              <div className="mt-0.5">
+                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-[12px] text-primary-deep/90 leading-relaxed">
+                <span className="font-semibold text-primary-deep">Format Guidelines:</span> Ensure all pages are readable. Uploads must be strictly PDF or Word documents under 5MB.
               </p>
             </div>
           </div>
@@ -331,7 +384,7 @@ export default function DocumentsSetupPage() {
             <button
               onClick={handleComplete}
               disabled={!isValid}
-              className="w-full bg-black text-white h-12 rounded-xl font-medium text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 pressable"
+              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary shadow-sm"
             >
               Complete Setup
               <ArrowRight className="w-4 h-4" />
