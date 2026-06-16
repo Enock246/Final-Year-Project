@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Apple-style Minimal Palette */
+  --primary: #18181B; /* zinc-900 */
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #3F3F46; /* zinc-700 */
+  --secondary-foreground: #FFFFFF;
+
+  --cta: #000000; /* Pure black for primary buttons */
+  --cta-foreground: #FFFFFF;
+  
+  --background: #FAFAFA; /* zinc-50 */
+  --foreground: #09090B; /* zinc-950 */
+  
+  --card: #FFFFFF;
+  --card-foreground: #09090B;
+  
+  --popover: #FFFFFF;
+  --popover-foreground: #09090B;
+  
+  --muted: #F4F4F5; /* zinc-100 */
+  --muted-foreground: #71717A; /* zinc-500 */
+  
+  --accent: #F4F4F5;
+  --accent-foreground: #09090B;
+  
+  --border: #E4E4E7; /* zinc-200 */
+  --input: #E4E4E7;
+  --ring: #18181B;
+
+  --radius: 1rem; /* rounded-2xl equivalent */
+  
+  /* Smooth linear transitions */
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-cta: var(--cta);
+  --color-cta-foreground: var(--cta-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  --radius-xl: var(--radius);
+  --radius-lg: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.5rem);
+  --radius-sm: calc(var(--radius) - 0.75rem);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  
+  /* Subtle utility classes */
+  .border-subtle {
+    @apply border border-gray-200;
+  }
+
+  /* Smooth pressable micro-interactions */
+  button, .pressable {
+    transition: all 200ms var(--ease-smooth), opacity 200ms ease;
+  }
+  
+  @media (hover: hover) and (pointer: fine) {
+    button:active, .pressable:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Bono",
+    "districts": ["Sunyani Municipal", "Berekum East Municipal", "Dormaa Central Municipal", "Wenchi Municipal"]
+  },
+  {
+    "name": "Ashanti",
+    "districts": ["Kumasi Metropolitan", "Asokore Mampong Municipal", "Obuasi Municipal", "Ejisu Municipal", "Kwadaso Municipal"]
+  },
+  {
+    "name": "Greater Accra",
+    "districts": ["Accra Metropolitan", "Tema Metropolitan", "La Dade Kotopon Municipal", "Ledzokuku Municipal"]
+  },
+  {
+    "name": "Central",
+    "districts": ["Cape Coast Metropolitan", "Awutu Senya East Municipal", "Effutu Municipal", "Kassena Nankana Municipal"]
+  },
+  {
+    "name": "Northern",
+    "districts": ["Tamale Metropolitan", "Sagnerigu Municipal", "Yendi Municipal"]
+  }
+]
