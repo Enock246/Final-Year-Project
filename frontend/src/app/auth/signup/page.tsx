@@ -37,7 +37,7 @@ export default function SignupPage() {
 
   // OTP Verification States
   const [verificationSent, setVerificationSent] = useState(false);
-  const [emailForOtp, setEmailForOtp] = useState('');
+  const [signupData, setSignupData] = useState<SignupFormValues | null>(null);
   const [otpCode, setOtpCode] = useState('');
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
@@ -55,57 +55,41 @@ export default function SignupPage() {
   const loadingSteps = [
     'Creating your account...',
     'Setting up your secure profile...',
-    'Sending verification email...',
+    'Signing you in...',
   ];
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true);
     setErrorMessage('');
-    setLoadingStep(0);
-    setEmailForOtp(data.email);
+    setSignupData(data);
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.fullName,
-          phone_number: data.phone,
-          student_id: data.studentId
-        },
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(result.error || 'Failed to send verification code');
+        setIsSubmitting(false);
+        return;
       }
-    });
 
-    if (authError) {
       setIsSubmitting(false);
-      if (authError.message.includes('already registered')) {
-        setErrorMessage('This email is already registered. Please sign in instead.');
-      } else {
-        setErrorMessage(authError.message);
-      }
-      return;
-    }
-
-    if (authData?.user && authData.user.identities && authData.user.identities.length === 0) {
+      setVerificationSent(true);
+    } catch (err) {
+      console.error(err);
+      setErrorMessage('An unexpected error occurred. Please try again.');
       setIsSubmitting(false);
-      setErrorMessage('This email is already registered. Please sign in instead.');
-      return;
     }
-
-    await new Promise(r => setTimeout(r, 800));
-    setLoadingStep(1);
-    await new Promise(r => setTimeout(r, 800));
-    setLoadingStep(2);
-    await new Promise(r => setTimeout(r, 800));
-    
-    setIsSubmitting(false);
-    setErrorMessage('');
-    setVerificationSent(true);
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpCode.length !== 6) {
+    if (otpCode.length !== 6 || !signupData) {
       setErrorMessage('Please enter a valid 6-digit code.');
       return;
     }
@@ -113,44 +97,87 @@ export default function SignupPage() {
     setIsVerifyingOtp(true);
     setErrorMessage('');
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: emailForOtp,
-      token: otpCode,
-      type: 'signup'
-    });
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: signupData.email, otp: otpCode }),
+      });
 
-    if (error) {
+      const result = await res.json();
+
+      if (!res.ok) {
+        setIsVerifyingOtp(false);
+        setErrorMessage(result.error || 'Invalid or expired code.');
+        return;
+      }
+
+      // OTP Verified successfully! Now let's create the account natively.
+      setVerificationSent(false); // Hide OTP form
+      setIsSubmitting(true); // Show loading steps
+      
+      setLoadingStep(0);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: signupData.email,
+        password: signupData.password,
+        options: {
+          data: {
+            full_name: signupData.fullName,
+            phone_number: signupData.phone,
+            student_id: signupData.studentId
+          },
+        }
+      });
+
+      if (authError) {
+        setIsSubmitting(false);
+        setErrorMessage(authError.message);
+        return;
+      }
+
+      await new Promise(r => setTimeout(r, 600));
+      setLoadingStep(1);
+      await new Promise(r => setTimeout(r, 600));
+      setLoadingStep(2);
+      await new Promise(r => setTimeout(r, 600));
+
+      // Success! Redirect to profile setup
+      router.push('/profile/location');
+      
+    } catch (err) {
+      console.error(err);
       setIsVerifyingOtp(false);
-      setErrorMessage(error.message);
-      return;
+      setErrorMessage('An error occurred during verification.');
     }
-
-    // Success! Redirect to profile setup
-    router.push('/profile/location');
   };
+
+  // Card Container Styling (Stripe Feature Card Light)
+  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
+  const inputClassName = "w-full py-2 px-3 rounded-sm border border-input bg-canvas text-ink body-md focus:outline-none focus:border-primary transition-all";
+  const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
 
   if (verificationSent) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-50">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-canvas-soft min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className="w-full max-w-sm flex flex-col items-center text-center space-y-4 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm"
+          className={cardClassName + " flex flex-col items-center text-center"}
         >
-          <div className="w-16 h-16 bg-zinc-50 text-black rounded-full flex items-center justify-center mb-2 border border-gray-100">
-            <ShieldCheck className="w-8 h-8 stroke-[1.5]" />
+          <div className="w-12 h-12 bg-primary-subdued text-primary-deep rounded-full flex items-center justify-center mb-6">
+            <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
           </div>
-          <h2 className="text-xl font-semibold text-zinc-900 tracking-tight">Enter verification code</h2>
-          <p className="text-zinc-500 text-sm text-balance leading-relaxed mb-4">
-            We've sent a 6-digit code to <span className="font-medium text-zinc-900">{emailForOtp}</span>. Please enter it below.
+          <h2 className="heading-lg text-ink mb-2">Verify your email</h2>
+          <p className="body-md text-ink-mute mb-6">
+            We've sent a 6-digit code to <span className="font-medium text-ink">{signupData?.email}</span>.
           </p>
 
           {errorMessage && (
             <motion.div
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs font-medium mb-4"
+              className="w-full p-3 bg-red-50 border border-red-200 text-ruby rounded-md text-[13px] font-medium mb-4 text-left"
             >
               {errorMessage}
             </motion.div>
@@ -167,14 +194,15 @@ export default function SignupPage() {
                   setOtpCode(val);
                 }}
                 placeholder="000000"
-                className="w-full h-14 px-4 text-center tracking-[1em] text-2xl font-medium rounded-xl border border-gray-200 bg-white text-zinc-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className="w-full h-12 px-4 text-center tracking-[1em] text-2xl font-light rounded-sm border border-input bg-canvas text-ink focus:outline-none focus:border-primary transition-all"
+                style={{ fontFeatureSettings: '"tnum", "ss01"' }}
               />
             </div>
 
             <button
               type="submit"
               disabled={otpCode.length !== 6 || isVerifyingOtp}
-              className="w-full bg-black text-white h-12 rounded-xl font-medium text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 pressable mt-2"
+              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary mt-2"
             >
               {isVerifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
@@ -186,7 +214,7 @@ export default function SignupPage() {
               setVerificationSent(false);
               setOtpCode('');
             }}
-            className="text-xs text-zinc-500 hover:text-black mt-2 font-medium transition-colors"
+            className="text-[13px] text-ink-mute hover:text-primary mt-6 font-medium transition-colors"
           >
             Wrong email? Go back
           </button>
@@ -197,8 +225,8 @@ export default function SignupPage() {
 
   if (isSubmitting) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-50">
-        <div className="w-full max-w-sm space-y-6 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-canvas-soft min-h-screen">
+        <div className={cardClassName + " space-y-6"}>
           {loadingSteps.map((step, index) => (
             <AnimatePresence key={index}>
               {loadingStep >= index && (
@@ -206,20 +234,20 @@ export default function SignupPage() {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
-                  className="flex items-center gap-4 text-sm font-medium text-zinc-900"
+                  className="flex items-center gap-4 text-[15px] font-light text-ink"
                 >
                   {loadingStep > index ? (
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="text-black"
+                      className="text-primary"
                     >
                       <CheckCircle2 className="w-5 h-5 stroke-[2]" />
                     </motion.div>
                   ) : (
-                    <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                    <Loader2 className="w-5 h-5 animate-spin text-ink-mute" />
                   )}
-                  <span className={loadingStep > index ? 'text-zinc-900' : 'text-zinc-500'}>
+                  <span className={loadingStep > index ? 'text-ink' : 'text-ink-mute'}>
                     {step}
                   </span>
                 </motion.div>
@@ -232,121 +260,122 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col p-6 bg-zinc-50">
+    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
       <div className="w-full max-w-md mx-auto mt-8 flex-1">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+          className={cardClassName}
         >
-          <h1 className="text-2xl font-semibold tracking-tight mb-2 text-zinc-900">Create account</h1>
-          <p className="text-zinc-500 text-sm mb-8">Join InternConnect to find your placement.</p>
+          <h1 className="heading-lg text-ink mb-1">Create your account</h1>
+          <p className="body-md text-ink-mute mb-8">Join InternConnect to find your placement.</p>
 
           {errorMessage && (
             <motion.div
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium flex items-center gap-2"
+              className="mb-6 p-3 bg-red-50 border border-red-200 text-ruby rounded-md text-[13px] font-medium flex items-start gap-2"
             >
-              <div className="w-2 h-2 bg-red-500 rounded-full" />
-              {errorMessage}
+              <div className="w-1.5 h-1.5 bg-ruby rounded-full mt-1.5 shrink-0" />
+              <span>{errorMessage}</span>
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Full Name</label>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div>
+              <label className={labelClassName}>Full name</label>
               <input
                 {...register('fullName')}
                 placeholder="Kwame Mensah"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className={inputClassName}
               />
-              {errors.fullName && <p className="text-red-500 text-xs mt-1 font-medium">{errors.fullName.message}</p>}
+              {errors.fullName && <p className="text-ruby text-[13px] mt-1.5">{errors.fullName.message}</p>}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Email</label>
+            <div>
+              <label className={labelClassName}>Email</label>
               <input
                 {...register('email')}
                 type="email"
                 placeholder="kwame.mensah@stu.aamusted.edu.gh"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className={inputClassName}
               />
-              {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>}
+              {errors.email && <p className="text-ruby text-[13px] mt-1.5">{errors.email.message}</p>}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Phone Number</label>
+            <div>
+              <label className={labelClassName}>Phone number</label>
               <input
                 {...register('phone')}
                 type="tel"
                 placeholder="0244123456"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className={`${inputClassName} body-tabular`}
               />
-              {errors.phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phone.message}</p>}
+              {errors.phone && <p className="text-ruby text-[13px] mt-1.5">{errors.phone.message}</p>}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Student ID</label>
+            <div>
+              <label className={labelClassName}>Student ID</label>
               <input
                 {...register('studentId')}
                 placeholder="IT/ED/2023/001"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className={`${inputClassName} body-tabular`}
               />
-              {errors.studentId && <p className="text-red-500 text-xs mt-1 font-medium">{errors.studentId.message}</p>}
+              {errors.studentId && <p className="text-ruby text-[13px] mt-1.5">{errors.studentId.message}</p>}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Password</label>
+            <div>
+              <label className={labelClassName}>Password</label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="w-full h-12 px-4 pr-10 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  className={`${inputClassName} pr-10`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center justify-center text-zinc-400 hover:text-zinc-700 transition-colors"
+                  className="absolute inset-y-0 right-3 flex items-center justify-center text-ink-mute hover:text-ink transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
+              {errors.password && <p className="text-ruby text-[13px] mt-1.5">{errors.password.message}</p>}
             </div>
 
-            <div className="pt-2 pb-4">
+            <div className="pt-1 pb-2">
               <label className="flex items-start gap-3 cursor-pointer group">
-                <div className="relative flex items-center justify-center mt-0.5">
+                <div className="relative flex items-center justify-center mt-0.5 shrink-0">
                   <input 
                     {...register('terms')} 
                     type="checkbox" 
-                    className="peer w-5 h-5 appearance-none rounded border border-gray-300 bg-white checked:bg-black checked:border-black transition-all cursor-pointer" 
+                    className="peer w-[18px] h-[18px] appearance-none rounded-sm border border-input bg-canvas checked:bg-primary checked:border-primary transition-all cursor-pointer" 
                   />
-                  <CheckCircle2 className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity stroke-[3]" />
+                  <CheckCircle2 className="absolute w-[14px] h-[14px] text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity stroke-[3]" />
                 </div>
-                <span className="text-sm font-normal text-zinc-500 transition-colors leading-relaxed">
-                  I agree to the <Link href="/terms" className="text-black hover:underline font-medium">Terms of Service</Link> and <Link href="/privacy" className="text-black hover:underline font-medium">Privacy Policy</Link>
+                <span className="text-[13px] font-normal text-ink-mute transition-colors leading-snug">
+                  I agree to the <Link href="/terms" className="text-primary hover:text-primary-press font-medium transition-colors">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:text-primary-press font-medium transition-colors">Privacy Policy</Link>
                 </span>
               </label>
-              {errors.terms && <p className="text-red-500 text-xs mt-1 font-medium">{errors.terms.message}</p>}
+              {errors.terms && <p className="text-ruby text-[13px] mt-1.5">{errors.terms.message}</p>}
             </div>
 
             <button
               type="submit"
               disabled={!isValid}
-              className="w-full bg-black text-white h-12 rounded-xl font-medium text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 pressable mt-2"
+              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 btn-primary mt-2 shadow-sm"
             >
-              Create Account
+              Create account
               <ChevronRight className="w-4 h-4" />
             </button>
           </form>
 
-          <p className="text-center mt-8 text-sm text-zinc-500">
+          <p className="text-center mt-6 text-[13px] text-ink-mute">
             Already have an account?{' '}
-            <Link href="/auth/signin" className="font-medium text-black hover:underline">
-              Sign In
+            <Link href="/auth/signin" className="font-medium text-primary hover:text-primary-press transition-colors">
+              Sign in
             </Link>
           </p>
         </motion.div>

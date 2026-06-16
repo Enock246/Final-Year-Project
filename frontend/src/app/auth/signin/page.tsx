@@ -66,58 +66,63 @@ export default function SigninPage() {
     }
   };
 
+  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
+  const inputClassName = "w-full py-2 px-3 rounded-sm border border-input bg-canvas text-ink body-md focus:outline-none focus:border-primary transition-all";
+  const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
+
   return (
-    <main className="flex-1 flex flex-col p-6 bg-zinc-50">
+    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
       <div className="w-full max-w-md mx-auto mt-8 flex-1">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+          className={cardClassName}
         >
-          <h1 className="text-2xl font-semibold tracking-tight mb-2 text-zinc-900">Welcome back</h1>
-          <p className="text-zinc-500 text-sm mb-8">Sign in to track your internship placements.</p>
+          <h1 className="heading-lg text-ink mb-1">Welcome back</h1>
+          <p className="body-md text-ink-mute mb-8">Sign in to track your internship placements.</p>
 
           {errorMessage && (
             <motion.div
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium flex items-center gap-2"
+              className="mb-6 p-3 bg-red-50 border border-red-200 text-ruby rounded-md text-[13px] font-medium flex items-start gap-2"
             >
-              <div className="w-2 h-2 bg-red-500 rounded-full" />
-              {errorMessage}
+              <div className="w-1.5 h-1.5 bg-ruby rounded-full mt-1.5 shrink-0" />
+              <span>{errorMessage}</span>
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Email</label>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div>
+              <label className={labelClassName}>Email</label>
               <input
                 {...register('email')}
                 type="email"
                 placeholder="kwame.mensah@stu.aamusted.edu.gh"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                className={inputClassName}
               />
-              {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>}
+              {errors.email && <p className="text-ruby text-[13px] mt-1.5">{errors.email.message}</p>}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Password</label>
+            <div>
+              <label className={labelClassName}>Password</label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="w-full h-12 px-4 pr-10 rounded-xl border border-gray-200 bg-white text-zinc-900 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  className={`${inputClassName} pr-10`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center justify-center text-zinc-400 hover:text-zinc-700 transition-colors"
+                  className="absolute inset-y-0 right-3 flex items-center justify-center text-ink-mute hover:text-ink transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
+              {errors.password && <p className="text-ruby text-[13px] mt-1.5">{errors.password.message}</p>}
             </div>
 
             <AnimatePresence>
@@ -126,14 +131,14 @@ export default function SigninPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="p-4 bg-zinc-100 rounded-xl border border-gray-200 flex flex-col gap-3 overflow-hidden mt-4"
+                  className="p-4 bg-canvas-soft rounded-lg border border-hairline flex flex-col gap-3 overflow-hidden mt-4"
                 >
-                  <p className="text-xs font-semibold text-zinc-900">Security Verification</p>
-                  <p className="text-xs text-zinc-500">Please verify you are human to continue.</p>
+                  <p className="text-[13px] font-medium text-ink">Security Verification</p>
+                  <p className="text-[13px] text-ink-mute">Please verify you are human to continue.</p>
                   <button
                     type="button"
                     onClick={() => setCaptchaToken('dev_test_token')}
-                    className={`h-10 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${captchaToken ? 'bg-black text-white shadow-none' : 'bg-white border border-gray-200 text-zinc-700 hover:bg-zinc-50 shadow-sm'}`}
+                    className={`h-10 rounded-sm text-[13px] font-medium transition-all flex items-center justify-center gap-2 ${captchaToken ? 'bg-primary text-white' : 'bg-canvas border border-input text-ink hover:border-primary'}`}
                   >
                     {captchaToken ? (
                       <>
@@ -151,17 +156,17 @@ export default function SigninPage() {
             <button
               type="submit"
               disabled={isSubmitting || !isValid || !watch('password') || (isCaptchaRequired && !captchaToken)}
-              className="w-full bg-black text-white h-12 rounded-xl font-medium text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 pressable mt-6"
+              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 btn-primary mt-6 shadow-sm"
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          <p className="text-center mt-8 text-sm text-zinc-500">
+          <p className="text-center mt-6 text-[13px] text-ink-mute">
             Don't have an account?{' '}
-            <Link href="/auth/signup" className="font-medium text-black hover:underline">
-              Create Account
+            <Link href="/auth/signup" className="font-medium text-primary hover:text-primary-press transition-colors">
+              Create account
             </Link>
           </p>
         </motion.div>
