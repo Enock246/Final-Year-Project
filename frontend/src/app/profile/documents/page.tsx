@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, CheckCircle2, File, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -40,13 +40,13 @@ export default function DocumentsSetupPage() {
           setDocs(prev => {
             const newDocs = { ...prev };
             if (data.cv_file_path) {
-              newDocs.cv = { file: new File([], 'cv.pdf'), name: 'Previously Uploaded CV', size: 1000, isProcessing: false, alreadyUploaded: true };
+              newDocs.cv = { file: new window.File([], 'cv.pdf'), name: 'Previously Uploaded CV', size: 1000, isProcessing: false, alreadyUploaded: true };
             }
             if (data.transcript_file_path) {
-              newDocs.transcript = { file: new File([], 'transcript.pdf'), name: 'Previously Uploaded Transcript', size: 1000, isProcessing: false, alreadyUploaded: true };
+              newDocs.transcript = { file: new window.File([], 'transcript.pdf'), name: 'Previously Uploaded Transcript', size: 1000, isProcessing: false, alreadyUploaded: true };
             }
             if (data.placement_letter_path) {
-              newDocs.placement = { file: new File([], 'placement.pdf'), name: 'Previously Uploaded Placement Letter', size: 1000, isProcessing: false, alreadyUploaded: true };
+              newDocs.placement = { file: new window.File([], 'placement.pdf'), name: 'Previously Uploaded Placement Letter', size: 1000, isProcessing: false, alreadyUploaded: true };
             }
             return newDocs;
           });

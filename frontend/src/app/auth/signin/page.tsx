@@ -62,7 +62,7 @@ export default function SigninPage() {
       setErrorMessage(result.error);
       setIsSubmitting(false);
     } else if (result?.success) {
-      router.push('/profile/location');
+      router.push(result.nextRoute || '/profile/location');
     }
   };
 
