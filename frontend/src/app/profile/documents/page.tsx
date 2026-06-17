@@ -13,6 +13,7 @@ interface UploadedDoc {
   name: string;
   size: number;
   isProcessing?: boolean;
+  alreadyUploaded?: boolean;
 }
 
 export default function DocumentsSetupPage() {
@@ -24,6 +25,36 @@ export default function DocumentsSetupPage() {
     transcript: null,
     placement: null,
   });
+
+  useEffect(() => {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('student_profiles')
+          .select('cv_file_path, transcript_file_path, placement_letter_path')
+          .eq('student_id', user.id)
+          .single();
+
+        if (data) {
+          setDocs(prev => {
+            const newDocs = { ...prev };
+            if (data.cv_file_path) {
+              newDocs.cv = { file: new File([], 'cv.pdf'), name: 'Previously Uploaded CV', size: 1000, isProcessing: false, alreadyUploaded: true };
+            }
+            if (data.transcript_file_path) {
+              newDocs.transcript = { file: new File([], 'transcript.pdf'), name: 'Previously Uploaded Transcript', size: 1000, isProcessing: false, alreadyUploaded: true };
+            }
+            if (data.placement_letter_path) {
+              newDocs.placement = { file: new File([], 'placement.pdf'), name: 'Previously Uploaded Placement Letter', size: 1000, isProcessing: false, alreadyUploaded: true };
+            }
+            return newDocs;
+          });
+        }
+      }
+    }
+    loadData();
+  }, [supabase]);
   
   const [isUploading, setIsUploading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -111,8 +142,14 @@ export default function DocumentsSetupPage() {
       const paths: Record<string, string> = {};
       
       for (const type of ['cv', 'transcript', 'placement'] as DocumentType[]) {
-        if (docs[type] && !docs[type]?.isProcessing) {
-          const file = docs[type]!.file;
+        const doc = docs[type];
+        if (doc && !doc.isProcessing) {
+          if (doc.alreadyUploaded) {
+            // Do nothing, it's already in the DB and we don't want to overwrite the path
+            continue;
+          }
+
+          const file = doc.file;
           const fileExt = file.name.split('.').pop();
           const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
           
@@ -135,6 +172,7 @@ export default function DocumentsSetupPage() {
       setLoadingStep(1);
 
       const { completeProfile } = await import('../actions');
+      // If paths is empty, this simply updates updated_at, which is fine
       const profileResult = await completeProfile(paths);
 
       if (profileResult.error) {

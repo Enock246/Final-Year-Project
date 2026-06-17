@@ -21,16 +21,39 @@ export default function TransportSetupPage() {
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('profileSetupDraft');
-    if (saved) {
+    async function loadData() {
+      const saved = localStorage.getItem('profileSetupDraft');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.transportMode) setTransportMode(data.transportMode);
+          if (data.maxCommute) setMaxCommute(data.maxCommute);
+        } catch (e) {
+          console.error('Failed to parse draft', e);
+        }
+      }
+
       try {
-        const data = JSON.parse(saved);
-        if (data.transportMode) setTransportMode(data.transportMode);
-        if (data.maxCommute) setMaxCommute(data.maxCommute);
-      } catch (e) {
-        console.error('Failed to parse draft', e);
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('student_profiles')
+            .select('transport_preference, max_commute_minutes')
+            .eq('student_id', user.id)
+            .single();
+
+          if (data) {
+            if (data.transport_preference) setTransportMode(data.transport_preference);
+            if (data.max_commute_minutes) setMaxCommute(data.max_commute_minutes);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching DB profile', err);
       }
     }
+    loadData();
   }, []);
 
   const handleNext = async () => {

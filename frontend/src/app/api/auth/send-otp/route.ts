@@ -28,6 +28,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many requests. Please wait a minute before trying again.' }, { status: 429 });
     }
 
+    // Check if user already exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('students')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
+    }
+
     // Generate a 6-digit code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 

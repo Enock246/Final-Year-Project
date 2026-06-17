@@ -75,17 +75,44 @@ export default function LocationSetupPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('profileSetupDraft');
-    if (saved) {
+    async function loadData() {
+      // 1. Load from localStorage first for immediate UI feel
+      const saved = localStorage.getItem('profileSetupDraft');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.region) setSelectedRegion(data.region);
+          if (data.district) setSelectedDistrict(data.district);
+          if (data.townCity) setTownCity(data.townCity);
+        } catch (e) {
+          console.error('Failed to parse draft', e);
+        }
+      }
+
+      // 2. Fetch from DB (overrides draft if the user previously saved it securely)
       try {
-        const data = JSON.parse(saved);
-        if (data.region) setSelectedRegion(data.region);
-        if (data.district) setSelectedDistrict(data.district);
-        if (data.townCity) setTownCity(data.townCity);
-      } catch (e) {
-        console.error('Failed to parse draft', e);
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('student_profiles')
+            .select('region_id, district_id, town_city')
+            .eq('student_id', user.id)
+            .single();
+
+          if (data) {
+            // Note: DB doesn't currently store the raw name for region_id/district_id if they are UUIDs. 
+            // In our current setup, we actually don't store region name in DB yet since it expects IDs.
+            // But we do store town_city. Let's at least populate town_city.
+            if (data.town_city) setTownCity(data.town_city);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching DB profile', err);
       }
     }
+    loadData();
   }, []);
 
   const handleNext = async () => {
