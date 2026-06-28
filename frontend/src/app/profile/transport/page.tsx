@@ -91,13 +91,15 @@ export default function TransportSetupPage() {
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     const percentage = x / rect.width;
     
-    // Values: 1 to 120 minutes
-    const min = 1;
+    // Values: 15 to 120 minutes with 15-minute steps
+    const min = 15;
     const max = 120;
-    let newValue = Math.round(min + percentage * (max - min));
+    const step = 15;
+    const rawValue = min + percentage * (max - min);
     
-    // Smooth 1-minute intervals
-    setMaxCommute(Math.max(1, Math.min(120, newValue)));
+    // Smooth 15-minute intervals
+    const newValue = Math.round(rawValue / step) * step;
+    setMaxCommute(Math.max(min, Math.min(max, newValue)));
   };
 
   useEffect(() => {
@@ -135,24 +137,24 @@ export default function TransportSetupPage() {
     return m === 0 ? `${h} hrs` : `${h}h ${m}m`;
   };
 
-  const sliderPercentage = ((maxCommute - 1) / (120 - 1)) * 100;
+  const sliderPercentage = ((Math.max(15, maxCommute) - 15) / (120 - 15)) * 100;
 
   // Stripe Classes
   const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
   const labelClassName = "text-[13px] font-medium text-ink-secondary mb-3 flex items-center gap-2";
 
   return (
-    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto mt-8 flex-1">
+    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
+      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className={cardClassName}
+          className="w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-level-1 md:border md:border-hairline flex-1 flex flex-col"
         >
           <button 
             onClick={handleBack}
-            className="flex items-center gap-1 text-[13px] font-medium text-ink-mute hover:text-ink mb-6 transition-colors"
+            className="flex items-center gap-1 caption text-ink-mute hover:text-ink mb-6 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
@@ -184,16 +186,16 @@ export default function TransportSetupPage() {
                       className={`relative flex flex-col items-start p-4 rounded-md border text-left transition-all ${
                         isSelected 
                           ? 'border-primary bg-primary-subdued/30' 
-                          : 'border-input bg-canvas hover:border-ink-mute/30'
+                          : 'border-hairline-input bg-canvas hover:border-ink-mute/30'
                       }`}
                     >
                       <div className={`mb-3 p-1.5 rounded-sm ${isSelected ? 'bg-primary text-white shadow-sm' : 'bg-canvas-soft text-ink-mute'}`}>
                         <Icon className="w-4 h-4" />
                       </div>
-                      <span className={`text-[14px] font-semibold mb-0.5 ${isSelected ? 'text-primary-deep' : 'text-ink'}`}>
+                      <span className={`body-md font-medium mb-0.5 ${isSelected ? 'text-primary-deep' : 'text-ink'}`}>
                         {mode.label}
                       </span>
-                      <span className={`text-[11px] leading-tight ${isSelected ? 'text-primary-deep/80' : 'text-ink-mute'}`}>
+                      <span className={`micro leading-tight ${isSelected ? 'text-primary-deep/80' : 'text-ink-mute'}`}>
                         {mode.description}
                       </span>
                       
@@ -220,7 +222,7 @@ export default function TransportSetupPage() {
               <div className="mt-8 px-2">
                 <div 
                   ref={sliderRef}
-                  className="relative h-1.5 bg-input rounded-full cursor-pointer"
+                  className="relative h-1.5 bg-hairline rounded-full cursor-pointer"
                   onMouseDown={(e) => {
                     setIsDragging(true);
                     handleSliderUpdate(e.clientX);
@@ -243,31 +245,31 @@ export default function TransportSetupPage() {
                   
                   {/* Floating tooltip */}
                   <div 
-                    className="absolute -top-10 -translate-x-1/2 bg-ink text-white text-[12px] font-semibold py-1 px-2.5 rounded-sm whitespace-nowrap shadow-sm pointer-events-none after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[4px] after:border-transparent after:border-t-ink"
+                    className="absolute -top-10 -translate-x-1/2 bg-ink text-white caption font-medium py-1 px-2.5 rounded-sm whitespace-nowrap shadow-sm pointer-events-none after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[4px] after:border-transparent after:border-t-ink"
                     style={{ left: `${sliderPercentage}%` }}
                   >
                     {formatTime(maxCommute)}
                   </div>
                 </div>
                 
-                <div className="flex justify-between mt-3 text-[11px] font-medium text-ink-mute">
-                  <span>1 min</span>
+                <div className="flex justify-between mt-3 micro font-medium text-ink-mute">
+                  <span>15 mins</span>
                   <span>2+ hours</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-10">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[13px] text-ruby min-h-[20px] transition-opacity">
+          <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
+            <div className="flex items-center justify-between mb-3 md:mb-0 md:absolute md:-top-7 md:w-full">
+              <span className="caption text-ruby min-h-[20px] transition-opacity">
                 {!isValid ? "Please select a transport mode to continue." : ""}
               </span>
             </div>
             <button
               onClick={handleNext}
               disabled={!isValid || isSaving}
-              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary shadow-sm"
+              className="w-full button-primary-pill min-h-[48px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

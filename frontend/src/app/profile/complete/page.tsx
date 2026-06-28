@@ -27,7 +27,7 @@ export default function ProfileCompletePage() {
     router.push('/dashboard');
   };
 
-  const cardClassName = "w-full max-w-md bg-canvas p-10 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline flex flex-col items-center text-center";
+  const cardClassName = "w-full max-w-md bg-canvas p-10 rounded-lg shadow-level-1 border border-hairline flex flex-col items-center text-center";
 
   return (
     <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
@@ -58,7 +58,7 @@ export default function ProfileCompletePage() {
               initial={{ opacity: 0, rotate: -45, scale: 0 }}
               animate={{ opacity: 1, rotate: 0, scale: 1 }}
               transition={{ delay: 0.6, duration: 0.4 }}
-              className="absolute -top-2 -right-2 text-yellow-400"
+              className="absolute -top-2 -right-2 text-warning"
             >
               <Sparkles className="w-6 h-6 fill-current" />
             </motion.div>
@@ -71,7 +71,7 @@ export default function ProfileCompletePage() {
 
           <button
             onClick={handleDashboard}
-            className="w-full bg-primary text-white button-md py-3 px-4 rounded-pill hover:bg-primary-press transition-all flex items-center justify-center gap-2 btn-primary shadow-sm group"
+            className="w-full button-primary-pill py-3 px-4 flex items-center justify-center gap-2 group"
           >
             Enter Dashboard
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

@@ -13,6 +13,7 @@ export default function LocationSetupPage() {
   const [townCity, setTownCity] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
   const [locationDetected, setLocationDetected] = useState<{ region: string; town: string } | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
 
   const activeDistricts = regionsData.find((r) => r.name === selectedRegion)?.districts || [];
 
@@ -24,6 +25,7 @@ export default function LocationSetupPage() {
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
+            setCoords({ lat: latitude, lon: longitude });
             
             const res = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
             const data = await res.json();
@@ -128,7 +130,11 @@ export default function LocationSetupPage() {
 
     const { updateProfile } = await import('../actions');
     const result = await updateProfile({
-      town_city: townCity
+      town_city: townCity,
+      region_name: selectedRegion,
+      district_name: selectedDistrict,
+      latitude: coords?.lat,
+      longitude: coords?.lon
     });
     
     setIsSaving(false);
@@ -142,18 +148,17 @@ export default function LocationSetupPage() {
   const isValid = selectedRegion && selectedDistrict && townCity.length > 2;
 
   // Stripe Classes
-  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
-  const inputClassName = "w-full h-10 px-3 rounded-sm border border-input bg-canvas text-ink text-[14px] font-normal focus:outline-none focus:border-primary transition-all";
+  const inputClassName = "text-input w-full min-h-[48px]";
   const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
 
   return (
-    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto mt-8 flex-1">
+    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
+      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className={cardClassName}
+          className="w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-level-1 md:border md:border-hairline flex-1 flex flex-col"
         >
           <div className="flex justify-between items-start mb-2">
             <div>
@@ -166,7 +171,7 @@ export default function LocationSetupPage() {
                 await supabase.auth.signOut();
                 router.push('/');
               }}
-              className="text-[13px] font-medium text-ink-mute hover:text-ink transition-colors"
+              className="caption text-ink-mute hover:text-ink transition-colors"
             >
               Sign Out
             </button>
@@ -237,12 +242,12 @@ export default function LocationSetupPage() {
               <button
                 onClick={handleDetectLocation}
                 disabled={isDetecting || !!locationDetected}
-                className={`w-full h-10 rounded-sm font-medium text-[13px] transition-all flex items-center justify-center gap-2 ${
+                className={`w-full min-h-[48px] md:h-10 rounded-sm font-medium text-[16px] md:text-[13px] transition-all flex items-center justify-center gap-2 ${
                   locationDetected 
                     ? 'bg-primary-subdued text-primary-deep cursor-default border border-transparent'
                     : isDetecting 
-                      ? 'bg-canvas-soft text-ink-mute border border-input cursor-wait' 
-                      : 'bg-white hover:bg-canvas-soft text-ink border border-input shadow-sm'
+                      ? 'bg-canvas-soft text-ink-mute border border-hairline-input cursor-wait' 
+                      : 'bg-white hover:bg-canvas-soft text-ink border border-hairline-input shadow-sm'
                 }`}
               >
                 {locationDetected ? (
@@ -277,8 +282,8 @@ export default function LocationSetupPage() {
                       <MapPin className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[13px] font-medium text-primary-deep leading-tight mb-0.5">We found you!</p>
-                      <p className="text-[12px] text-primary-deep/80 leading-tight">
+                      <p className="caption text-primary-deep leading-tight mb-0.5">We found you!</p>
+                      <p className="micro text-primary-deep/80 leading-tight">
                         Mapped to {locationDetected.town}, {locationDetected.region}
                       </p>
                     </div>
@@ -288,16 +293,16 @@ export default function LocationSetupPage() {
             </AnimatePresence>
           </div>
 
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[13px] text-ruby min-h-[20px] transition-opacity">
+          <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
+            <div className="flex items-center justify-between mb-3 md:mb-0 md:absolute md:-top-7 md:w-full">
+              <span className="caption text-ruby min-h-[20px] transition-opacity">
                 {!isValid ? "Please complete all required fields." : ""}
               </span>
             </div>
             <button
               onClick={handleNext}
               disabled={!isValid || isSaving}
-              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary shadow-sm"
+              className="w-full button-primary-pill min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

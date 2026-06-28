@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ChevronRight, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Loader2, Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
@@ -151,19 +151,25 @@ export default function SignupPage() {
     }
   };
 
-  // Card Container Styling (Stripe Feature Card Light)
-  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
-  const inputClassName = "w-full py-2 px-3 rounded-sm border border-input bg-canvas text-ink body-md focus:outline-none focus:border-primary transition-all";
+  const getInputClassName = (hasError: boolean, hasIconRight: boolean = false) => {
+    const base = "w-full min-h-[48px] px-3 rounded-sm border bg-canvas text-[16px] md:text-[15px] text-ink focus:outline-none transition-shadow duration-200";
+    const paddingRight = hasIconRight ? "pr-10" : "";
+    if (hasError) {
+      return `${base} ${paddingRight} border-ruby focus:border-ruby focus:ring-[3px] focus:ring-ruby/20`;
+    }
+    return `${base} ${paddingRight} border-input focus:border-primary focus:ring-[3px] focus:ring-primary/20`;
+  };
+
   const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
 
   if (verificationSent) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-canvas-soft min-h-screen">
+      <main className="flex-1 flex flex-col items-center justify-center p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className={cardClassName + " flex flex-col items-center text-center"}
+          className="w-full max-w-md bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-[rgba(0,55,112,0.08)_0_1px_3px] md:border md:border-hairline space-y-6 flex-1 md:flex-none flex flex-col justify-center items-center text-center"
         >
           <div className="w-12 h-12 bg-primary-subdued text-primary-deep rounded-full flex items-center justify-center mb-6">
             <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
@@ -199,14 +205,16 @@ export default function SignupPage() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={otpCode.length !== 6 || isVerifyingOtp}
-              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary mt-2"
-            >
-              {isVerifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
-            </button>
+            <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
+              <button
+                type="submit"
+                disabled={otpCode.length !== 6 || isVerifyingOtp}
+                className="w-full bg-primary text-white text-[16px] font-medium min-h-[48px] px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                {isVerifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
+              </button>
+            </div>
           </form>
           
           <button 
@@ -226,7 +234,7 @@ export default function SignupPage() {
   if (isSubmitting) {
     return (
       <main className="flex-1 flex flex-col items-center justify-center p-6 bg-canvas-soft min-h-screen">
-        <div className={cardClassName + " space-y-6"}>
+        <div className="w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-[rgba(0,55,112,0.08)_0_1px_3px] md:border md:border-hairline max-w-md space-y-6">
           {loadingSteps.map((step, index) => (
             <AnimatePresence key={index}>
               {loadingStep >= index && (
@@ -260,13 +268,13 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto mt-8 flex-1">
+    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
+      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className={cardClassName}
+          className="w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-[rgba(0,55,112,0.08)_0_1px_3px] md:border md:border-hairline flex-1 flex flex-col"
         >
           <h1 className="heading-lg text-ink mb-1">Create your account</h1>
           <p className="body-md text-ink-mute mb-8">Join InternConnect to find your placement.</p>
@@ -284,63 +292,97 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className={labelClassName}>Full name</label>
-              <input
-                {...register('fullName')}
-                placeholder="Kwame Mensah"
-                className={inputClassName}
-              />
+              <label className={labelClassName}>Full Name</label>
+              <div className="relative">
+                <input
+                  {...register('fullName')}
+                  type="text"
+                  placeholder="Kwame Mensah"
+                  className={getInputClassName(!!errors.fullName, !!errors.fullName)}
+                />
+                {errors.fullName && (
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <AlertCircle className="w-4 h-4 text-ruby" />
+                  </div>
+                )}
+              </div>
               {errors.fullName && <p className="text-ruby text-[13px] mt-1.5">{errors.fullName.message}</p>}
             </div>
 
             <div>
-              <label className={labelClassName}>Email</label>
-              <input
-                {...register('email')}
-                type="email"
-                placeholder="kwame.mensah@stu.aamusted.edu.gh"
-                className={inputClassName}
-              />
+              <label className={labelClassName}>School Email</label>
+              <div className="relative">
+                <input
+                  {...register('email')}
+                  type="email"
+                  placeholder="kwame.mensah@stu.aamusted.edu.gh"
+                  className={getInputClassName(!!errors.email, !!errors.email)}
+                />
+                {errors.email && (
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <AlertCircle className="w-4 h-4 text-ruby" />
+                  </div>
+                )}
+              </div>
               {errors.email && <p className="text-ruby text-[13px] mt-1.5">{errors.email.message}</p>}
             </div>
 
             <div>
               <label className={labelClassName}>Phone number</label>
-              <input
-                {...register('phone')}
-                type="tel"
-                placeholder="0244123456"
-                className={`${inputClassName} body-tabular`}
-              />
+              <div className="relative">
+                <input
+                  {...register('phone')}
+                  type="tel"
+                  placeholder="0244123456"
+                  className={`${getInputClassName(!!errors.phone, !!errors.phone)} body-tabular`}
+                />
+                {errors.phone && (
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <AlertCircle className="w-4 h-4 text-ruby" />
+                  </div>
+                )}
+              </div>
               {errors.phone && <p className="text-ruby text-[13px] mt-1.5">{errors.phone.message}</p>}
             </div>
 
             <div>
               <label className={labelClassName}>Student ID</label>
-              <input
-                {...register('studentId')}
-                placeholder="IT/ED/2023/001"
-                className={`${inputClassName} body-tabular`}
-              />
+              <div className="relative">
+                <input
+                  {...register('studentId')}
+                  placeholder="IT/ED/2023/001"
+                  className={`${getInputClassName(!!errors.studentId, !!errors.studentId)} body-tabular`}
+                />
+                {errors.studentId && (
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <AlertCircle className="w-4 h-4 text-ruby" />
+                  </div>
+                )}
+              </div>
               {errors.studentId && <p className="text-ruby text-[13px] mt-1.5">{errors.studentId.message}</p>}
             </div>
 
             <div>
-              <label className={labelClassName}>Password</label>
+              <label className={labelClassName}>Create Password</label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className={`${inputClassName} pr-10`}
+                  className={getInputClassName(!!errors.password, true)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center justify-center text-ink-mute hover:text-ink transition-colors"
+                  className={`absolute inset-y-0 ${errors.password ? 'right-10' : 'right-3'} flex items-center justify-center text-ink-mute hover:text-ink transition-colors`}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+                {errors.password && (
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <AlertCircle className="w-4 h-4 text-ruby" />
+                  </div>
+                )}
               </div>
               {errors.password && <p className="text-ruby text-[13px] mt-1.5">{errors.password.message}</p>}
             </div>
@@ -362,14 +404,16 @@ export default function SignupPage() {
               {errors.terms && <p className="text-ruby text-[13px] mt-1.5">{errors.terms.message}</p>}
             </div>
 
-            <button
-              type="submit"
-              disabled={!isValid}
-              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 btn-primary mt-2 shadow-sm"
-            >
-              Create account
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
+              <button
+                type="submit"
+                disabled={!isValid}
+                className="w-full bg-primary text-white text-[16px] font-medium min-h-[48px] px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                Create account
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </form>
 
           <p className="text-center mt-6 text-[13px] text-ink-mute">

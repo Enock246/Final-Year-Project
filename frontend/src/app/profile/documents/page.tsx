@@ -150,8 +150,8 @@ export default function DocumentsSetupPage() {
           }
 
           const file = doc.file;
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
+          const safeOriginalName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+          const fileName = `${user.id}/${type}_${Date.now()}_${safeOriginalName}`;
           
           const { data, error } = await supabase.storage
             .from('documents')
@@ -215,7 +215,7 @@ export default function DocumentsSetupPage() {
   const isValid = docs.cv !== null && !docs.cv.isProcessing && 
                   docs.transcript !== null && !docs.transcript.isProcessing;
 
-  const cardClassName = "w-full max-w-md bg-canvas p-8 rounded-lg shadow-[rgba(0,55,112,0.08)_0_1px_3px] border border-hairline";
+  const cardClassName = "w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-level-1 md:border md:border-hairline flex-1 flex flex-col";
 
   if (isUploading) {
     return (
@@ -239,7 +239,7 @@ export default function DocumentsSetupPage() {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
-                    className="flex items-center gap-4 text-[14px] font-medium text-ink bg-canvas-soft p-4 rounded-md border border-input"
+                    className="flex items-center gap-4 text-[14px] font-medium text-ink bg-canvas-soft p-4 rounded-md border border-hairline-input"
                   >
                     {loadingStep > index ? (
                       <motion.div
@@ -274,13 +274,13 @@ export default function DocumentsSetupPage() {
         onClick={() => !doc && !isProcessing && fileInputRefs[type].current?.click()}
         className={`w-full p-4 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-center min-h-[90px] ${
           doc && !isProcessing
-            ? 'bg-canvas border border-input shadow-sm' 
+            ? 'bg-canvas border border-hairline-input shadow-sm' 
             : 'bg-primary-subdued/10 border border-dashed border-primary/30 hover:bg-primary-subdued/30 hover:border-primary/50 cursor-pointer'
         }`}
       >
         <div className="flex items-start justify-between w-full">
           <div className="flex items-start gap-3 w-full">
-            <div className={`p-2 rounded-sm shrink-0 transition-colors ${doc && !isProcessing ? 'bg-primary-subdued text-primary-deep' : 'bg-canvas border border-input text-primary'}`}>
+            <div className={`p-2 rounded-sm shrink-0 transition-colors ${doc && !isProcessing ? 'bg-primary-subdued text-primary-deep' : 'bg-canvas border border-hairline-input text-primary'}`}>
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
               ) : doc ? (
@@ -297,15 +297,15 @@ export default function DocumentsSetupPage() {
               </h3>
               
               {!doc ? (
-                <p className="text-[12px] text-ink-mute">PDF or Word doc (Max 5MB)</p>
+                <p className="caption text-ink-mute">PDF or Word doc (Max 5MB)</p>
               ) : isProcessing ? (
-                <p className="text-[12px] text-primary font-medium animate-pulse">Scanning document...</p>
+                <p className="caption text-primary font-medium animate-pulse">Scanning document...</p>
               ) : (
                 <div className="flex items-center gap-2">
-                  <p className="text-[12px] font-medium text-ink-secondary truncate max-w-[140px]">
+                  <p className="caption font-medium text-ink-secondary truncate max-w-[140px]">
                     {doc.name}
                   </p>
-                  <span className="text-[11px] text-ink-mute shrink-0">
+                  <span className="micro text-ink-mute shrink-0">
                     {(doc.size / 1024).toFixed(0)} KB
                   </span>
                 </div>
@@ -315,20 +315,20 @@ export default function DocumentsSetupPage() {
           
           <div className="shrink-0 flex items-center">
             {!doc ? (
-              <span className="text-[12px] font-semibold text-primary bg-primary-subdued px-3 py-1.5 rounded-sm">
+              <span className="caption font-semibold text-primary bg-primary-subdued px-3 py-1.5 rounded-sm">
                 Upload
               </span>
             ) : !isProcessing && (
               <div className="flex flex-col gap-1.5">
                 <span 
                   onClick={(e) => { e.stopPropagation(); fileInputRefs[type].current?.click(); }}
-                  className="text-[11px] font-medium text-ink-mute hover:text-ink transition-colors cursor-pointer text-right"
+                  className="micro font-medium text-ink-mute hover:text-ink transition-colors cursor-pointer text-right"
                 >
                   Replace
                 </span>
                 <span 
                   onClick={(e) => { e.stopPropagation(); removeFile(type); }}
-                  className="text-[11px] font-medium text-ruby hover:text-ruby-press transition-colors cursor-pointer text-right"
+                  className="micro font-medium text-ruby hover:text-ruby-press transition-colors cursor-pointer text-right"
                 >
                   Remove
                 </span>
@@ -360,8 +360,8 @@ export default function DocumentsSetupPage() {
   };
 
   return (
-    <main className="flex-1 flex flex-col p-6 bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto mt-8 flex-1">
+    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
+      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -370,7 +370,7 @@ export default function DocumentsSetupPage() {
         >
           <button 
             onClick={handleBack}
-            className="flex items-center gap-1 text-[13px] font-medium text-ink-mute hover:text-ink mb-6 transition-colors"
+            className="flex items-center gap-1 caption text-ink-mute hover:text-ink mb-6 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
@@ -407,25 +407,25 @@ export default function DocumentsSetupPage() {
             <div className="bg-primary-subdued/50 rounded-sm p-4 mt-8 flex items-start gap-3">
               <div className="mt-0.5">
                 <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-[12px] text-primary-deep/90 leading-relaxed">
+              <p className="caption text-primary-deep/90 leading-relaxed">
                 <span className="font-semibold text-primary-deep">Format Guidelines:</span> Ensure all pages are readable. Uploads must be strictly PDF or Word documents under 5MB.
               </p>
             </div>
           </div>
 
-          <div className="mt-10">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[13px] text-ruby min-h-[20px] transition-opacity">
+          <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
+            <div className="flex items-center justify-between mb-3 md:mb-0 md:absolute md:-top-7 md:w-full">
+              <span className="caption text-ruby min-h-[20px] transition-opacity">
                 {!isValid ? "Please upload the required documents to continue." : ""}
               </span>
             </div>
             <button
               onClick={handleComplete}
               disabled={!isValid}
-              className="w-full bg-primary text-white button-md py-2.5 px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 btn-primary shadow-sm"
+              className="w-full button-primary-pill min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               Complete Setup
               <ArrowRight className="w-4 h-4" />

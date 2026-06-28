@@ -18,15 +18,22 @@ export async function fetchDashboardMatches() {
     throw new Error('Failed to fetch matches');
   }
 
-  // Also fetch the user profile for the dashboard header
+  // Fetch the user profile for the dashboard header
   const { data: profile, error: profileError } = await supabase
     .from('students')
     .select('full_name')
     .eq('id', user.id)
     .single();
 
+  // Fetch the user's active application count
+  const { count: applicationCount, error: countError } = await supabase
+    .from('applications')
+    .select('*', { count: 'exact', head: true })
+    .eq('student_id', user.id);
+
   return {
     matches: matches || [],
     profile: profile || null,
+    applicationCount: applicationCount || 0,
   };
 }

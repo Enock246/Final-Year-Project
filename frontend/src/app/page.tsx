@@ -44,18 +44,18 @@ export default function OnboardingPage() {
   return (
     <main className="min-h-screen flex flex-col relative bg-canvas stripe-gradient-mesh">
       {/* Navigation on Mesh */}
-      <nav className="w-full px-6 py-6 lg:px-12 flex justify-between items-center z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-ink flex items-center justify-center text-white">
+      <nav className="w-full px-4 md:px-6 py-4 md:py-6 lg:px-12 flex justify-between items-center z-10">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-8 h-8 rounded-md bg-ink flex items-center justify-center text-white shrink-0">
             <MapPin className="w-4 h-4" />
           </div>
-          <span className="font-semibold text-[18px] text-ink tracking-tight">InternConnect</span>
+          <span className="font-semibold text-[16px] md:text-[18px] text-ink tracking-tight truncate">InternConnect</span>
         </div>
-        <div className="flex items-center gap-6">
-          <Link href="/auth/signin" className="text-ink font-medium text-[15px] hover:text-primary transition-colors">
+        <div className="flex items-center gap-4 md:gap-6">
+          <Link href="/auth/signin" className="hidden md:block text-ink font-medium text-[15px] hover:text-primary transition-colors">
             Sign in
           </Link>
-          <Link href="/auth/signup" className="bg-primary text-white button-sm rounded-pill px-4 py-2 hover:bg-primary-press transition-colors shadow-sm">
+          <Link href="/auth/signup" className="button-primary-pill">
             Start now
           </Link>
         </div>
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
             key={`title-${currentSlide}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="display-xl text-ink mb-6"
+            className="display-xxl text-ink mb-6"
           >
             {slides[currentSlide].title}
           </motion.h1>
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="body-lg text-ink-secondary"
+            className="body-lg text-ink-mute"
           >
             {slides[currentSlide].description}
           </motion.p>
@@ -86,7 +86,7 @@ export default function OnboardingPage() {
 
         {/* Floating Card */}
         <div 
-          className="w-full max-w-md bg-canvas rounded-xl shadow-[rgba(0,55,112,0.08)_0_8px_24px,rgba(0,55,112,0.04)_0_2px_6px] p-10 flex flex-col items-center relative overflow-hidden"
+          className="w-full max-w-md bg-canvas rounded-xl shadow-level-2 p-10 flex flex-col items-center relative overflow-hidden"
           style={{ border: '1px solid var(--hairline)' }}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
 
           <button 
             onClick={handleNext}
-            className="w-full bg-primary text-white button-md h-[48px] rounded-pill hover:bg-primary-press transition-colors flex items-center justify-center gap-2 btn-primary"
+            className="w-full button-primary-pill h-[48px] flex items-center justify-center gap-2"
           >
             {currentSlide === slides.length - 1 ? 'Create your account' : 'Next'}
             <ChevronRight className="w-4 h-4 stroke-[2]" />
