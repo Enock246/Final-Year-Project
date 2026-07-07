@@ -53,16 +53,18 @@ export async function GET(request: Request) {
       );
     }
 
-    const { state, town, city, village, county, suburb, road } = data.address;
+    const { state, state_district, town, city, village, county, municipality, suburb, road, neighbourhood, residential, quarter, borough, hamlet } = data.address;
     
-    const rawRegion = state || county || '';
+    const rawRegion = state || '';
     const cleanRegion = rawRegion.replace(/ Region/i, '').trim();
     // Prioritize precise local names over generic cities
-    const detectedTown = suburb || town || city || village || road || '';
+    const detectedTown = suburb || neighbourhood || residential || quarter || borough || town || city || village || hamlet || road || '';
+    const detectedDistrict = state_district || county || municipality || '';
 
     return NextResponse.json({
       region: cleanRegion,
       town: detectedTown,
+      district: detectedDistrict,
       fullAddress: data.display_name,
     });
   } catch (error) {

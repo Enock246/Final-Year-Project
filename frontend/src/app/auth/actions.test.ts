@@ -19,6 +19,7 @@ describe('signInWithProtection Server Action', () => {
       rpc: vi.fn(),
       auth: {
         signInWithPassword: vi.fn(),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test' } } }),
       },
     };
 
@@ -57,7 +58,7 @@ describe('signInWithProtection Server Action', () => {
 
     const result = await signInWithProtection(formData);
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, nextRoute: '/dashboard' });
     expect(mockSupabase.rpc).toHaveBeenCalledWith('get_failed_login_count', { user_email: email });
     expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({ email, password: 'password123' });
     expect(mockSupabase.rpc).toHaveBeenCalledWith('reset_failed_login', { user_email: email });
@@ -79,7 +80,7 @@ describe('signInWithProtection Server Action', () => {
 
     const result = await signInWithProtection(formData);
 
-    expect(result).toEqual({ error: 'Invalid credentials' });
+    expect(result).toEqual({ error: 'Invalid login credentials' });
     expect(mockSupabase.rpc).toHaveBeenCalledWith('increment_failed_login', { user_email: email });
   });
 
@@ -135,7 +136,7 @@ describe('signInWithProtection Server Action', () => {
 
     const result = await signInWithProtection(formData);
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, nextRoute: '/dashboard' });
     expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalled();
     expect(mockSupabase.rpc).toHaveBeenCalledWith('reset_failed_login', { user_email: email });
   });

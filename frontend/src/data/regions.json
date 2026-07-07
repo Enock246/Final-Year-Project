@@ -1,22 +1,66 @@
 [
   {
-    "name": "Bono",
-    "districts": ["Sunyani Municipal", "Berekum East Municipal", "Dormaa Central Municipal", "Wenchi Municipal"]
+    "name": "Ahafo",
+    "districts": ["Asunafo North Municipal", "Asunafo South", "Asutifi North", "Asutifi South", "Tano North Municipal", "Tano South Municipal"]
   },
   {
     "name": "Ashanti",
-    "districts": ["Kumasi Metropolitan", "Asokore Mampong Municipal", "Obuasi Municipal", "Ejisu Municipal", "Kwadaso Municipal"]
+    "districts": ["Kumasi Metropolitan", "Asokore Mampong Municipal", "Obuasi Municipal", "Ejisu Municipal", "Kwadaso Municipal", "Mampong Municipal", "Bekwai Municipal", "Asante Akim Central Municipal", "Ahafo Ano North Municipal", "Ahafo Ano South"]
   },
   {
-    "name": "Greater Accra",
-    "districts": ["Accra Metropolitan", "Tema Metropolitan", "La Dade Kotopon Municipal", "Ledzokuku Municipal"]
+    "name": "Bono",
+    "districts": ["Sunyani Municipal", "Sunyani West", "Berekum East Municipal", "Berekum West", "Dormaa Central Municipal", "Dormaa East", "Wenchi Municipal", "Jaman North", "Jaman South Municipal"]
+  },
+  {
+    "name": "Bono East",
+    "districts": ["Techiman Municipal", "Techiman North", "Kintampo North Municipal", "Kintampo South", "Nkoranza South Municipal", "Nkoranza North", "Atebubu-Amantin Municipal", "Pru East", "Sene West"]
   },
   {
     "name": "Central",
-    "districts": ["Cape Coast Metropolitan", "Awutu Senya East Municipal", "Effutu Municipal", "Kassena Nankana Municipal"]
+    "districts": ["Cape Coast Metropolitan", "Awutu Senya East Municipal", "Effutu Municipal", "Komenda/Edina/Eguafo/Abirem Municipal", "Mfantseman Municipal", "Agona West Municipal", "Asikuma/Odoben/Brakwa", "Upper Denkyira East Municipal"]
+  },
+  {
+    "name": "Eastern",
+    "districts": ["New Juaben South Municipal", "New Juaben North Municipal", "Nsawam Adoagyiri Municipal", "Suhum Municipal", "Abuakwa South Municipal", "Kwahu West Municipal", "Birim Central Municipal", "West Akim Municipal"]
+  },
+  {
+    "name": "Greater Accra",
+    "districts": ["Accra Metropolitan", "Tema Metropolitan", "La Dade Kotopon Municipal", "Ledzokuku Municipal", "Adentan Municipal", "Ashaiman Municipal", "Ga East Municipal", "Ga West Municipal", "Ga South Municipal"]
+  },
+  {
+    "name": "North East",
+    "districts": ["East Mamprusi Municipal", "West Mamprusi Municipal", "Bunkpurugu Nyankpanduri", "Chereponi", "Mamprugu Moagduri", "Yunyoo-Nasuan"]
   },
   {
     "name": "Northern",
-    "districts": ["Tamale Metropolitan", "Sagnerigu Municipal", "Yendi Municipal"]
+    "districts": ["Tamale Metropolitan", "Sagnerigu Municipal", "Yendi Municipal", "Savelugu Municipal", "Tolon", "Kumbungu", "Nanton", "Gushegu Municipal", "Karaga"]
+  },
+  {
+    "name": "Oti",
+    "districts": ["Krachi East Municipal", "Krachi West", "Krachi Nchumuru", "Nkwanta South Municipal", "Nkwanta North", "Kadjebi", "Jasikan", "Biakoye", "Guan"]
+  },
+  {
+    "name": "Savannah",
+    "districts": ["West Gonja Municipal", "East Gonja Municipal", "Bole", "Sawla-Tuna-Kalba", "Central Gonja", "North Gonja", "North East Gonja"]
+  },
+  {
+    "name": "Upper East",
+    "districts": ["Bolgatanga Metropolitan", "Kassena Nankana Municipal", "Bawku Municipal", "Builsa North Municipal", "Builsa South", "Bongo", "Talensi", "Nabdam"]
+  },
+  {
+    "name": "Upper West",
+    "districts": ["Wa Municipal", "Sissala East Municipal", "Jirapa Municipal", "Nadowli-Kaleo", "Lawra Municipal", "Nandom Municipal", "Lambussie Karni", "Sissala West"]
+  },
+  {
+    "name": "Volta",
+    "districts": ["Ho Municipal", "Ketu South Municipal", "Hohoe Municipal", "Kpandu Municipal", "Keta Municipal", "South Tongu", "North Tongu", "Central Tongu", "Afadzato South"]
+  },
+  {
+    "name": "Western",
+    "districts": ["Sekondi-Takoradi Metropolitan", "Tarkwa-Nsuaem Municipal", "Effia-Kwesimintsim Municipal", "Nzema East Municipal", "Ellembelle", "Jomoro Municipal", "Prestea-Huni Valley Municipal", "Wassa Amenfi East Municipal"]
+  },
+  {
+    "name": "Western North",
+    "districts": ["Sefwi Wiawso Municipal", "Bibiani-Anhwiaso-Bekwai Municipal", "Aowin Municipal", "Juaboso", "Bia West", "Bia East", "Bodi", "Suaman"]
   }
 ]

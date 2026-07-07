@@ -4,15 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { LogOut, HelpCircle, Settings, Bell, Menu, X, Home, Search, FileText, User, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
+import { LogOut, HelpCircle, Settings, Bell, Menu, X, Home, Search, FileText, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 
 const tabs = [
   { name: 'Overview', href: '/dashboard', icon: Home },
   { name: 'Find Schools', href: '/dashboard/find', icon: Search },
   { name: 'Applications', href: '/dashboard/applications', icon: FileText },
-  { name: 'Profile', href: '/profile/location', icon: User },
+  { name: 'Profile & Settings', href: '/dashboard/settings', icon: User },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +19,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -101,8 +99,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 title={isCollapsed && !mobileMenuOpen ? tab.name : undefined}
                 className={`flex items-center gap-3 py-2.5 rounded-md transition-colors ${isCollapsed && !mobileMenuOpen ? 'px-0 justify-center' : 'px-3'} ${
                   isActive 
-                    ? 'bg-canvas-soft text-ink font-semibold' 
-                    : 'text-ink-mute hover:bg-canvas-soft hover:text-ink font-medium'
+                    ? 'bg-primary/10 text-primary font-[450]' 
+                    : 'text-ink-mute hover:bg-black/5 hover:text-primary font-medium'
                 }`}
               >
                 <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-ink-mute'}`} />
@@ -135,14 +133,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className={`flex items-center ${isCollapsed && !mobileMenuOpen ? 'flex-col gap-2' : 'justify-between gap-2 mt-2'}`}>
-            <button 
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={`flex items-center justify-center rounded-md text-ink-mute hover:text-ink hover:bg-canvas-soft transition-colors h-10 ${isCollapsed && !mobileMenuOpen ? 'w-10' : 'w-10 shrink-0'}`}
-              title="Toggle Dark Mode"
-            >
-              {mounted && theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            
             <button 
               onClick={handleSignOut}
               title={isCollapsed && !mobileMenuOpen ? "Sign out" : undefined}

@@ -31,7 +31,7 @@ export default function LocationSetupPage() {
             const data = await res.json();
             
             if (res.ok && data) {
-              const { region: cleanRegion, town: detectedTown } = data;
+              const { region: cleanRegion, town: detectedTown, district: detectedDistrict } = data;
               
               const matchedRegion = regionsData.find((r) => 
                 r.name.toLowerCase().includes(cleanRegion.toLowerCase()) || 
@@ -40,7 +40,17 @@ export default function LocationSetupPage() {
               
               if (matchedRegion) {
                 setSelectedRegion(matchedRegion.name);
-                setSelectedDistrict('');
+                
+                let matchedDistrictName = '';
+                if (detectedDistrict) {
+                   const cleanDetDist = detectedDistrict.replace(/ District| Municipal| Metropolitan/gi, '').trim().toLowerCase();
+                   const found = matchedRegion.districts.find(d => {
+                      const cleanD = d.replace(/ District| Municipal| Metropolitan/gi, '').trim().toLowerCase();
+                      return cleanD.includes(cleanDetDist) || cleanDetDist.includes(cleanD);
+                   });
+                   if (found) matchedDistrictName = found;
+                }
+                setSelectedDistrict(matchedDistrictName);
               }
               
               if (detectedTown) {

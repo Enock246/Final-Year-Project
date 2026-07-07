@@ -47,28 +47,7 @@ export async function signInWithProtection(formData: FormData) {
   
   // Determine where the user left off
   const { data: { user } } = await supabase.auth.getUser();
-  let nextRoute = '/profile/location';
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('student_profiles')
-      .select('*')
-      .eq('student_id', user.id)
-      .single();
-
-    if (profile) {
-      if (!profile.town_city) {
-        nextRoute = '/profile/location';
-      } else if (!profile.transport_preference) {
-        nextRoute = '/profile/transport';
-      } else if (!profile.cv_file_path || !profile.transcript_file_path) {
-        nextRoute = '/profile/documents';
-      } else {
-        // They have completed the setup
-        nextRoute = '/profile/complete'; // or /dashboard once built
-      }
-    }
-  }
+  let nextRoute = '/dashboard';
 
   return { success: true, nextRoute };
 }

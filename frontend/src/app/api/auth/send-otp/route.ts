@@ -1,18 +1,34 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
+import { z } from 'zod';
+
+// Security Review: Strict input validation schema
+const sendOtpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
-
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    // 1. Validate Input (Security Review)
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
+
+    const parseResult = sendOtpSchema.safeParse(body);
+    if (!parseResult.success) {
+      // Redact detailed Zod errors and return generic validation error
+      return NextResponse.json({ error: 'A valid email is required' }, { status: 400 });
+    }
+
+    const { email } = parseResult.data;
 
     const supabaseAdmin = createAdminClient();
 
-    // Rate Limiting (max 3 requests per minute)
+    // 2. Rate Limiting (max 3 requests per minute)
     const { data: isAllowed, error: rateLimitError } = await supabaseAdmin.rpc('check_otp_rate_limit', {
       user_email: email,
       max_requests: 3,
@@ -20,7 +36,7 @@ export async function POST(request: Request) {
     });
 
     if (rateLimitError) {
-      console.error('Rate limit checking error:', rateLimitError);
+      console.error('Rate limit checking error (Redacted details for security)');
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
@@ -28,7 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many requests. Please wait a minute before trying again.' }, { status: 429 });
     }
 
-    // Check if user already exists
+    // 3. Check if user already exists
     const { data: existingUser } = await supabaseAdmin
       .from('students')
       .select('id')
@@ -39,38 +55,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
     }
 
-    // Generate a 6-digit code
+    // 4. Generate a 6-digit code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Store securely via Admin client
+    // 5. Store securely via Admin client
     const { error: dbError } = await supabaseAdmin
       .from('email_otps')
       .insert({ email, otp });
 
     if (dbError) {
-      console.error('Database error:', dbError);
+      console.error('Database error storing OTP (Redacted details for security)');
       return NextResponse.json({ error: 'Failed to generate code' }, { status: 500 });
     }
 
-    // Send email using Resend
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const { error: emailError } = await resend.emails.send({
-        from: 'onboarding@resend.dev',
-        to: email,
-        subject: 'Your InternConnect Verification Code',
-        html: `
-          <h2>Confirm your email address</h2>
-          <p>Welcome to InternConnect! Please use the following 6-digit code to verify your email address and finish signing up:</p>
-          <h1 style="letter-spacing: 0.25em; padding: 20px; background-color: #f4f4f5; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold;">${otp}</h1>
-        `,
+    // 6. Send email using Nodemailer (Gmail App Password)
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
       });
 
-      if (emailError) {
-        console.error('Resend error:', emailError);
+      try {
+        await transporter.sendMail({
+          from: `"InternConnect" <${process.env.GMAIL_USER}>`,
+          to: email,
+          subject: 'Your InternConnect Verification Code',
+          html: `
+            <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto;">
+              <h2>Confirm your email address</h2>
+              <p>Welcome to InternConnect! Please use the following 6-digit code to verify your email address and finish signing up:</p>
+              <div style="letter-spacing: 0.25em; padding: 24px; background-color: #f4f4f5; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; margin: 32px 0;">
+                ${otp}
+              </div>
+              <p style="color: #666; font-size: 14px;">This code will expire shortly.</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error('Nodemailer sending error (Redacted details for security)');
         return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
       }
     } else {
+      console.warn('GMAIL_USER or GMAIL_APP_PASSWORD not configured. Falling back to console log.');
       console.log('\n=============================================');
       console.log(`[DEV MODE] OTP for ${email}: ${otp}`);
       console.log('=============================================\n');
@@ -78,7 +107,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // 7. Generic Error Fallback (Security Review: No stack traces)
+    console.error('Unexpected error in /api/auth/send-otp (Redacted details for security)');
+    return NextResponse.json({ error: 'An unexpected error occurred. Please try again later.' }, { status: 500 });
   }
 }

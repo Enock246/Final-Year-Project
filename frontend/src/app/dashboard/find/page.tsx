@@ -5,7 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Search, MapPin, Building, X, Filter, ChevronRight, Globe2, Mail, Phone, BookOpen, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import ApplicationWizardModal from './components/ApplicationWizardModal';
+import dynamic from 'next/dynamic';
+
+const LiveMap = dynamic(() => import('./components/LiveMap'), { 
+  ssr: false, 
+  loading: () => <div className="w-full h-full bg-[var(--canvas-soft)] animate-pulse rounded-md" /> 
+});
 
 // Types based on our schema
 type School = {
@@ -26,12 +33,49 @@ type School = {
   distance_km?: number | null;
   match_score?: number | null;
   has_applied?: boolean;
+  school_lat?: number | null;
+  school_lng?: number | null;
+  student_lat?: number | null;
+  student_lng?: number | null;
 };
 
 const formatMatchScore = (score: number) => {
   if (score === 100) return '95-100';
   const lowerBound = Math.floor(score / 5) * 5;
   return `${lowerBound}-${lowerBound + 5}`;
+};
+
+const gradients = [
+  'from-[#0D8ABC] to-[#0a6b94]',
+  'from-[#6366F1] to-[#4338CA]',
+  'from-[#3B82F6] to-[#1D4ED8]',
+  'from-[#F59E0B] to-[#D97706]',
+  'from-[#10B981] to-[#059669]',
+  'from-[#8B5CF6] to-[#6D28D9]',
+  'from-[#EC4899] to-[#BE185D]',
+  'from-[#F43F5E] to-[#BE123C]',
+  'from-[#14B8A6] to-[#0F766E]',
+];
+
+const avatarColors = [
+  '0D8ABC', '6366F1', '3B82F6', 'F59E0B', '10B981', '8B5CF6', 'EC4899', 'F43F5E', '14B8A6'
+];
+
+const getSchoolHash = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+};
+
+const getSchoolGradient = (name: string) => {
+  return gradients[getSchoolHash(name) % gradients.length];
+};
+
+const getSchoolAvatarUrl = (name: string) => {
+  const color = avatarColors[getSchoolHash(name) % avatarColors.length];
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${color}&color=fff&size=256&font-size=0.4&bold=true`;
 };
 
 function NewApplicationContent() {
@@ -67,8 +111,12 @@ function NewApplicationContent() {
 
       const { data, error } = await supabase.rpc('get_all_schools_with_scores', { student_uuid: user.id });
       
-      const { data: apps } = await supabase.from('applications').select('school_id').eq('student_id', user.id);
-      const appliedSchoolIds = new Set(apps?.map(a => a.school_id) || []);
+      const { data: apps } = await supabase.from('applications').select('school_id, status').eq('student_id', user.id);
+      
+      const activeStatuses = ['PENDING', 'DELIVERED', 'OPENED', 'ACCEPTED'];
+      const appliedSchoolIds = new Set(
+        apps?.filter(a => activeStatuses.includes(a.status)).map(a => a.school_id) || []
+      );
         
       if (!error && data) {
         // Map the RPC data back to the structure expected by the UI
@@ -84,7 +132,7 @@ function NewApplicationContent() {
         
         // Auto-open application wizard if apply parameter is present
         if (applySchoolId) {
-          const targetSchool = data.find(s => s.id === applySchoolId);
+          const targetSchool = data.find((s: any) => s.id === applySchoolId);
           if (targetSchool) {
             setSelectedSchool(targetSchool as School);
             setShowApplyWizard(true);
@@ -126,39 +174,71 @@ function NewApplicationContent() {
     <div className="w-full animate-in fade-in duration-500 max-w-[1400px] mx-auto pb-24">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-10 gap-6">
+      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-end mb-10 gap-6">
         <div>
           <h1 className="display-lg text-[var(--ink)] mb-3">Find a School</h1>
           <p className="body-lg text-[var(--ink-mute)]">Search our verified database and apply for your placement.</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-80">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+          <div className="relative w-full sm:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-mute)]" />
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by school name..."
-              className="w-full h-12 bg-white border border-[var(--hairline)] rounded-xl pl-11 pr-4 text-[15px] text-[var(--ink)] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all shadow-sm"
+              className="w-full h-12 bg-white border border-[var(--hairline)] rounded-md pl-11 pr-4 text-[15px] text-[var(--ink)] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all shadow-sm"
             />
           </div>
-          <button 
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="h-12 px-5 hidden lg:flex bg-white border border-[var(--hairline)] hover:border-[var(--ink)] rounded-xl text-[var(--ink)] items-center gap-2 transition-all shadow-sm shrink-0"
-          >
-            <Filter className="w-4 h-4" />
-            <span className="body-md font-medium">Filters</span>
-          </button>
+          
+          <div className="hidden lg:flex items-center gap-3">
+            <select 
+              value={selectedRegion}
+              onChange={(e) => {
+                setSelectedRegion(e.target.value);
+                setSelectedTown('');
+              }}
+              className="h-12 px-4 bg-white border border-[var(--hairline)] rounded-md text-[14px] font-medium focus:outline-none focus:border-[var(--primary)] text-[var(--ink)] shadow-sm appearance-none pr-10"
+              style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+            >
+              <option value="">All Regions</option>
+              {regions.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            
+            <select 
+              value={selectedTown}
+              onChange={(e) => setSelectedTown(e.target.value)}
+              className="h-12 px-4 bg-white border border-[var(--hairline)] rounded-md text-[14px] font-medium focus:outline-none focus:border-[var(--primary)] text-[var(--ink)] shadow-sm appearance-none pr-10"
+              style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+            >
+              <option value="">All Towns</option>
+              {towns.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            
+            {(searchQuery || selectedRegion || selectedTown) && (
+              <button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedRegion('');
+                  setSelectedTown('');
+                }}
+                className="text-[var(--ink-mute)] hover:text-[var(--primary)] p-2 transition-colors"
+                title="Clear Filters"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start relative">
+      <div className="flex flex-col relative">
         
         {/* Mobile Floating Action Button */}
         <button 
           onClick={() => setShowMobileFilters(true)}
-          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[var(--ink)] text-white px-6 py-3.5 rounded-[100px] shadow-[0_8px_30px_rgba(0,0,0,0.24)] font-medium flex items-center gap-2 hover:scale-105 transition-transform"
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[var(--ink)] text-white px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.24)] font-medium flex items-center gap-2 hover:scale-105 transition-transform"
         >
           <Filter className="w-4 h-4" />
           <span>Filters</span>
@@ -169,14 +249,14 @@ function NewApplicationContent() {
           )}
         </button>
 
-        {/* Sidebar Filters */}
+        {/* Sidebar Filters (Mobile Only Now) */}
         <aside className={`
           ${showMobileFilters ? 'fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-sm' : 'hidden'} 
-          lg:block lg:w-[280px] lg:shrink-0 lg:sticky lg:top-[120px] lg:bg-transparent lg:z-auto
+          lg:hidden
         `}>
           
-          <div className="bg-white lg:bg-transparent rounded-t-[24px] lg:rounded-none w-full max-h-[85vh] lg:max-h-none p-6 lg:p-0 flex flex-col shadow-2xl lg:shadow-none lg:border-l lg:border-[var(--hairline)]">
-            <div className="flex items-center justify-between mb-6 lg:hidden">
+          <div className="bg-white rounded-t-[24px] w-full max-h-[85vh] p-6 flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="heading-md">Filters</h2>
               <button onClick={() => setShowMobileFilters(false)} className="p-2 rounded-full hover:bg-[var(--canvas-soft)]">
                 <X className="w-5 h-5" />
@@ -194,7 +274,7 @@ function NewApplicationContent() {
                     setSelectedRegion(e.target.value);
                     setSelectedTown(''); // Reset town when region changes
                   }}
-                  className="w-full px-4 py-3 bg-white border border-[var(--hairline)] rounded-xl text-[15px] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all shadow-sm appearance-none"
+                  className="w-full px-4 py-3 bg-white border border-[var(--hairline)] rounded-md text-[15px] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all shadow-sm appearance-none"
                   style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
                 >
                   <option value="">All Regions</option>
@@ -210,7 +290,7 @@ function NewApplicationContent() {
                 <select 
                   value={selectedTown}
                   onChange={(e) => setSelectedTown(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-[var(--hairline)] rounded-xl text-[15px] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all shadow-sm appearance-none"
+                  className="w-full px-4 py-3 bg-white border border-[var(--hairline)] rounded-md text-[15px] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all shadow-sm appearance-none"
                   style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
                 >
                   <option value="">All Towns</option>
@@ -239,7 +319,7 @@ function NewApplicationContent() {
             <div className="mt-auto pt-6 lg:hidden">
               <button 
                 onClick={() => setShowMobileFilters(false)}
-                className="w-full bg-[var(--primary)] text-white py-3.5 rounded-xl font-semibold shadow-sm"
+                className="w-full bg-[var(--primary)] text-white py-3.5 rounded-md font-semibold shadow-sm"
               >
                 Show {filteredSchools.length} Schools
               </button>
@@ -252,9 +332,9 @@ function NewApplicationContent() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[1,2,3,4,5,6].map(i => (
-                <div key={i} className="bg-white rounded-[24px] border border-[var(--hairline)] p-6 h-[200px] animate-pulse">
+                <div key={i} className="bg-white rounded-2xl border border-[var(--hairline)] p-6 h-[200px] animate-pulse">
                   <div className="flex gap-4 mb-4">
-                    <div className="w-16 h-16 bg-[var(--canvas-soft)] rounded-2xl"></div>
+                    <div className="w-16 h-16 bg-[var(--canvas-soft)] rounded-md"></div>
                     <div className="flex-1 space-y-2">
                       <div className="h-5 bg-[var(--canvas-soft)] rounded w-3/4"></div>
                       <div className="h-4 bg-[var(--canvas-soft)] rounded w-1/2"></div>
@@ -264,7 +344,7 @@ function NewApplicationContent() {
               ))}
             </div>
           ) : filteredSchools.length === 0 ? (
-            <div className="text-center py-32 bg-white rounded-[32px] border border-[var(--hairline)] border-dashed">
+            <div className="text-center py-32 bg-white rounded-2xl border border-[var(--hairline)] border-dashed">
               <div className="w-20 h-20 bg-[var(--canvas-soft)] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-8 h-8 text-[var(--ink-mute)]" />
               </div>
@@ -278,7 +358,7 @@ function NewApplicationContent() {
                   setSelectedRegion('');
                   setSelectedTown('');
                 }}
-                className="px-6 py-2.5 bg-white border border-[var(--hairline)] rounded-xl font-medium shadow-sm hover:bg-[var(--canvas-soft)] transition-colors"
+                className="px-6 py-2.5 bg-white border border-[var(--hairline)] rounded-md font-medium shadow-sm hover:bg-[var(--canvas-soft)] transition-colors"
               >
                 Clear Filters
               </button>
@@ -291,21 +371,29 @@ function NewApplicationContent() {
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6"
+                variants={{ show: { transition: { staggerChildren: 0.05 } } }}
+                initial="hidden"
+                animate="show"
+              >
                 {filteredSchools.map((school) => (
-                  <div 
+                  <motion.div 
+                    layout
+                    variants={{
+                      hidden: { opacity: 0, y: 30, scale: 0.95 },
+                      show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", bounce: 0.3, duration: 0.6 } }
+                    }}
                     key={school.id}
-                    className="bg-white rounded-[24px] border border-[var(--hairline)] p-6 sm:p-8 hover:shadow-level-2 hover:border-transparent transition-all cursor-pointer flex flex-col group relative overflow-hidden"
+                    className="bg-[var(--canvas-soft)] rounded-2xl border border-[var(--hairline)] p-6 sm:p-8 hover:shadow-level-2 hover:border-[var(--hairline-input)] pressable hover:-translate-y-1.5 cursor-pointer flex flex-col group relative overflow-hidden"
                     onClick={() => setSelectedSchool(school)}
                   >
                     <div className="flex items-start gap-5">
-                      <div className="w-[72px] h-[72px] shrink-0 rounded-[16px] border border-[var(--hairline)] bg-white shadow-sm overflow-hidden relative">
+                      <div className="w-[72px] h-[72px] shrink-0 rounded-md border border-[var(--hairline)] bg-white shadow-sm overflow-hidden relative">
                         {school.logo_url ? (
                           <Image src={school.logo_url} alt={school.name} fill className="object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-[var(--canvas-soft)] flex items-center justify-center">
-                            <Building className="w-8 h-8 text-[var(--ink-mute)]" />
-                          </div>
+                          <Image src={getSchoolAvatarUrl(school.name)} alt={school.name} fill className="object-cover" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0 pt-1">
@@ -342,25 +430,31 @@ function NewApplicationContent() {
                         View Details <ChevronRight className="w-4 h-4" />
                       </span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </>
           )}
         </div>
       </div>
 
       {/* School Details Modal */}
+      <AnimatePresence>
       {selectedSchool && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-12 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-12">
           {/* Backdrop */}
-          <div 
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setSelectedSchool(null)}
           />
           
           {/* Modal Container */}
-          <div className="relative w-full max-w-[800px] max-h-[90vh] bg-white rounded-[32px] shadow-level-3 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+            className="relative w-full max-w-[800px] max-h-[90vh] bg-white rounded-2xl shadow-level-3 overflow-hidden flex flex-col"
+          >
             
             {/* Close Button */}
             <button 
@@ -378,17 +472,15 @@ function NewApplicationContent() {
                 {selectedSchool.cover_image_url ? (
                   <Image src={selectedSchool.cover_image_url} alt="Cover" fill className="object-cover" />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#0D8ABC] to-[#0a6b94]" />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${getSchoolGradient(selectedSchool.name)}`} />
                 )}
                 
                 {/* Overlapping Badge */}
-                <div className="absolute -bottom-12 left-8 sm:left-12 w-28 h-28 sm:w-32 sm:h-32 rounded-[24px] border-4 border-white bg-white shadow-lg overflow-hidden">
+                <div className="absolute -bottom-12 left-8 sm:left-12 w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden">
                    {selectedSchool.logo_url ? (
                      <Image src={selectedSchool.logo_url} alt={selectedSchool.name} fill className="object-cover" />
                    ) : (
-                     <div className="w-full h-full bg-[var(--canvas-soft)] flex items-center justify-center">
-                       <Building className="w-12 h-12 text-[var(--ink-mute)]" />
-                     </div>
+                     <Image src={getSchoolAvatarUrl(selectedSchool.name)} alt={selectedSchool.name} fill className="object-cover" />
                    )}
                 </div>
               </div>
@@ -406,10 +498,17 @@ function NewApplicationContent() {
                     </p>
                   </div>
                   
-                  <button 
-                    onClick={() => setShowApplyWizard(true)}
-                    disabled={selectedSchool.has_applied}
-                    className={`w-full sm:w-auto shrink-0 px-8 py-3.5 text-[15px] font-semibold rounded-xl shadow-sm transition-all ${
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (selectedSchool.has_applied) {
+                        alert("You already have an active application to this school.");
+                      } else {
+                        setSelectedSchool(selectedSchool);
+                        setShowApplyWizard(true);
+                      }
+                    }}
+                    className={`pressable w-full sm:w-auto shrink-0 px-8 py-3.5 text-[15px] font-semibold rounded-md shadow-sm transition-all ${
                       selectedSchool.has_applied 
                         ? 'bg-[var(--canvas-soft)] text-[var(--ink-mute)] cursor-not-allowed border border-[var(--hairline)]' 
                         : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-deep)] hover:-translate-y-0.5'
@@ -430,32 +529,41 @@ function NewApplicationContent() {
                       </div>
                     </section>
 
-                    <section className="relative group">
-                      <h3 className="heading-md text-[var(--ink)] mb-4">Placement Details</h3>
-                      {/* Blurred out container */}
-                      <div className="bg-[var(--canvas-soft)] rounded-[20px] p-6 border border-[var(--hairline)] blur-sm select-none pointer-events-none opacity-60">
-                        <div className="grid grid-cols-2 gap-6">
-                          <div>
-                            <p className="micro-cap text-[var(--ink-mute)] mb-1">Expected Interns</p>
-                            <p className="font-semibold text-[var(--ink)]">{selectedSchool.expected_interns || '4'}</p>
-                          </div>
-                          <div>
-                            <p className="micro-cap text-[var(--ink-mute)] mb-1">Status</p>
-                            <p className="font-semibold text-[var(--primary)]">Accepting Applications</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="micro-cap text-[var(--ink-mute)] mb-1">Requirements</p>
-                            <p className="text-[14px] text-[var(--ink)]">{selectedSchool.requirements || 'Pending requirements.'}</p>
-                          </div>
-                        </div>
+                    {/* Moved Location Section to Left Column */}
+                    <section className="bg-white border border-[var(--hairline)] rounded-[20px] p-6 shadow-sm flex flex-col">
+                      <h3 className="text-[14px] font-bold text-[var(--ink)] mb-4 uppercase tracking-wider">Location</h3>
+                      <div className="relative w-full h-[250px] bg-[var(--canvas-soft)] rounded-md mb-4 overflow-hidden border border-[var(--hairline)] flex-shrink-0 z-0">
+                        {selectedSchool.school_lat && selectedSchool.school_lng && selectedSchool.student_lat && selectedSchool.student_lng ? (
+                          <LiveMap 
+                            schoolLat={selectedSchool.school_lat}
+                            schoolLng={selectedSchool.school_lng}
+                            studentLat={selectedSchool.student_lat}
+                            studentLng={selectedSchool.student_lng}
+                            schoolName={selectedSchool.name}
+                            distanceKm={selectedSchool.distance_km || 0}
+                          />
+                        ) : (
+                          <>
+                            {/* Map Placeholder */}
+                            <div className="absolute inset-0 opacity-40 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=Ghana&zoom=6&size=400x200&maptype=roadmap&style=feature:all|element:labels|visibility:off&style=feature:road|element:geometry|color:0xffffff&style=feature:landscape|element:geometry|color:0xf5f5f5&style=feature:water|element:geometry|color:0xe0e0e0')] bg-cover bg-center" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
+                                <MapPin className="w-5 h-5 text-[var(--primary)]" />
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      {/* Overlay label */}
-                      <div className="absolute inset-0 flex items-center justify-center top-10 pointer-events-none">
-                        <span className="px-4 py-2 bg-white/80 backdrop-blur border border-[var(--hairline)] rounded-full text-[13px] font-semibold text-[var(--ink)] shadow-sm">
-                          Coming Soon
-                        </span>
+                      <div className="space-y-1">
+                        <p className="text-[14px] font-semibold text-[var(--ink)]">{selectedSchool.town_city || 'Town/City Not Specified'}</p>
+                        <p className="text-[13px] text-[var(--ink-mute)]">{selectedSchool.regions?.name ? `${selectedSchool.regions.name} Region` : 'Region Not Specified'}</p>
+                        {selectedSchool.districts?.name && (
+                          <p className="text-[13px] text-[var(--ink-mute)]">{selectedSchool.districts.name} District</p>
+                        )}
                       </div>
                     </section>
+
+
                   </div>
 
                   {/* Right Column: Meta Info */}
@@ -468,9 +576,9 @@ function NewApplicationContent() {
                           <div className="flex items-start gap-3">
                             <Mail className="w-5 h-5 text-[var(--ink-mute)] shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-[14px] font-medium text-[var(--ink)] truncate">
+                              <a href={`mailto:${selectedSchool.contact_email}`} className="text-[14px] font-medium text-[var(--primary)] hover:underline truncate block">
                                 {selectedSchool.contact_email}
-                              </p>
+                              </a>
                               <p className="text-[13px] text-[var(--ink-mute)]">Email</p>
                             </div>
                           </div>
@@ -480,9 +588,9 @@ function NewApplicationContent() {
                           <div className="flex items-start gap-3">
                             <Phone className="w-5 h-5 text-[var(--ink-mute)] shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-[14px] font-medium text-[var(--ink)] truncate">
+                              <a href={`tel:${selectedSchool.contact_phone.replace(/\s+/g, '')}`} className="text-[14px] font-medium text-[var(--primary)] hover:underline truncate block">
                                 {selectedSchool.contact_phone}
-                              </p>
+                              </a>
                               <p className="text-[13px] text-[var(--ink-mute)]">Phone</p>
                             </div>
                           </div>
@@ -494,39 +602,23 @@ function NewApplicationContent() {
                       </div>
                     </section>
 
-                    <section className="bg-white border border-[var(--hairline)] rounded-[20px] p-6 shadow-sm flex flex-col">
-                      <h3 className="text-[14px] font-bold text-[var(--ink)] mb-4 uppercase tracking-wider">Location</h3>
-                      <div className="relative w-full h-[180px] bg-[var(--canvas-soft)] rounded-xl mb-4 overflow-hidden border border-[var(--hairline)] flex-shrink-0">
-                        {/* Map Placeholder */}
-                        <div className="absolute inset-0 opacity-40 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=Ghana&zoom=6&size=400x200&maptype=roadmap&style=feature:all|element:labels|visibility:off&style=feature:road|element:geometry|color:0xffffff&style=feature:landscape|element:geometry|color:0xf5f5f5&style=feature:water|element:geometry|color:0xe0e0e0')] bg-cover bg-center" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
-                            <MapPin className="w-5 h-5 text-[var(--primary)]" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[14px] font-semibold text-[var(--ink)]">{selectedSchool.town_city || 'Town/City Not Specified'}</p>
-                        <p className="text-[13px] text-[var(--ink-mute)]">{selectedSchool.regions?.name ? `${selectedSchool.regions.name} Region` : 'Region Not Specified'}</p>
-                        {selectedSchool.districts?.name && (
-                          <p className="text-[13px] text-[var(--ink-mute)]">{selectedSchool.districts.name} District</p>
-                        )}
-                      </div>
-                    </section>
+
                   </div>
                 </div>
 
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+      </AnimatePresence>
 
       {selectedSchool && (
         <ApplicationWizardModal 
           isOpen={showApplyWizard}
           onClose={() => setShowApplyWizard(false)}
           school={selectedSchool}
+          hasApplied={selectedSchool?.has_applied}
         />
       )}
     </div>

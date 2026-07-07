@@ -36,18 +36,21 @@ export async function POST(req: Request) {
     }
 
     // Check for existing application
-    const { data: existingApp } = await supabase
+    const { data: existingApps } = await supabase
       .from('applications')
-      .select('id')
+      .select('id, status')
       .eq('student_id', parsed.student_id)
       .eq('school_id', parsed.school_id)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(1);
       
-    if (existingApp) {
-      return NextResponse.json({ error: 'You have already applied to this school.' }, { status: 409 });
+    const existingApp = existingApps && existingApps.length > 0 ? existingApps[0] : null;
+      
+    if (existingApp && ['PENDING', 'DELIVERED', 'OPENED', 'ACCEPTED'].includes(existingApp.status)) {
+      return NextResponse.json({ error: 'You already have an active application to this school.' }, { status: 409 });
     }
 
-    // Insert into database
+    // Insert new application
     const { data: dbData, error: dbError } = await supabase
       .from('applications')
       .insert([
@@ -188,7 +191,7 @@ export async function POST(req: Request) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request data', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request data', details: (error as any).errors }, { status: 400 });
     }
     console.error('Error sending application:', error);
     return NextResponse.json({ error: 'Failed to send application' }, { status: 500 });

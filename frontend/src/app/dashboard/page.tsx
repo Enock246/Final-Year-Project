@@ -17,7 +17,7 @@ export const parseMessageContent = (msg: any) => {
   let heading = rawSchoolName;
   let body = msg.content || '';
   
-  const prefixMatch = body.match(/^((?:Reply from|Update from|Message from)[^:]+:\s*)(.*)/is);
+  const prefixMatch = body.match(/^((?:Reply from|Update from|Message from)[^:]+:\s*)([\s\S]*)/i);
   if (prefixMatch) {
     heading = prefixMatch[1].trim(); 
     body = prefixMatch[2].trim();    
@@ -43,11 +43,10 @@ const getRelativeTime = (dateString: string) => {
 
 const getAvatarColor = (name: string) => {
   const colors = [
-    'bg-blue-100 text-blue-700 border-blue-200',
-    'bg-green-100 text-green-700 border-green-200',
-    'bg-purple-100 text-purple-700 border-purple-200',
-    'bg-pink-100 text-pink-700 border-pink-200',
-    'bg-amber-100 text-amber-700 border-amber-200',
+    'bg-[var(--canvas-soft)] text-[var(--ink)] border-[var(--hairline)]',
+    'bg-[var(--canvas-soft-2)] text-[var(--ink)] border-[var(--hairline)]',
+    'bg-[var(--canvas-cream)] text-[var(--ink-secondary)] border-[var(--hairline)]',
+    'bg-[var(--canvas)] text-[var(--ink)] border-[var(--hairline)]',
   ];
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
@@ -209,6 +208,13 @@ function DashboardContent() {
         console.log('Analytics RPC:', analyticsData, analyticsError);
         if (analyticsData) setAnalytics(analyticsData);
 
+        // Determine which school IDs have active applications
+        const activeSchoolIds = new Set(
+          (userApps || [])
+            .filter((a: any) => ['PENDING', 'DELIVERED', 'OPENED', 'ACCEPTED'].includes(a.status))
+            .map((a: any) => a.school_id)
+        );
+
         const { data, error } = await supabase.rpc('get_nearby_schools', { student_uuid: user.id, limit_count: 4 });
         console.log('Dashboard RPC result:', { data, error, userId: user.id });
         
@@ -222,6 +228,7 @@ function DashboardContent() {
             logo_url: school.logo_url,
             cover_image_url: school.cover_image_url,
             history: school.history,
+            has_applied: activeSchoolIds.has(school.id),
             stats: { pastInterns: (school.name.length % 20) + 1, offerRate: (school.name.length % 40) + 50 }
           }));
           setNearbySchools(mapped);
@@ -241,6 +248,7 @@ function DashboardContent() {
               logo_url: s.logo_url,
               cover_image_url: s.cover_image_url,
               history: s.history,
+              has_applied: activeSchoolIds.has(s.id),
               stats: { pastInterns: 5, offerRate: 70 }
             })));
           }
@@ -267,7 +275,7 @@ function DashboardContent() {
 
       {/* Stats Cards (Mobile Horizontal Snap Carousel) */}
       <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-[24px] p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <span className="body-md font-medium text-[var(--ink-secondary)]">Applications</span>
             <div className="w-10 h-10 rounded-full bg-[var(--canvas-soft)] flex items-center justify-center border border-[var(--hairline)] shrink-0">
@@ -277,7 +285,7 @@ function DashboardContent() {
           <span className="display-lg text-[var(--ink)]">{totalApplications}</span>
         </div>
 
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-[24px] p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <span className="body-md font-medium text-[var(--ink-secondary)]">Responses</span>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center border shrink-0 ${totalResponses > 0 ? 'bg-success/10 border-success/20' : 'bg-[var(--canvas-soft)] border-[var(--hairline)]'}`}>
@@ -287,7 +295,7 @@ function DashboardContent() {
           <span className="display-lg text-[var(--ink)]">{totalResponses}</span>
         </div>
 
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-[24px] p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <span className="body-md font-medium text-[var(--ink-secondary)]">Available</span>
             <div className="w-10 h-10 rounded-full bg-[var(--primary-subdued)]/30 flex items-center justify-center border border-[var(--primary-subdued)]/50 shrink-0">
@@ -297,7 +305,7 @@ function DashboardContent() {
           <span className="display-lg text-[var(--ink)]">{totalSchools || 0}</span>
         </div>
 
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-[24px] p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow flex flex-col justify-between">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow flex flex-col justify-between">
           <span className="body-md font-medium text-[var(--ink-secondary)] mb-4">Profile Status</span>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-3 h-3 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--success)] shrink-0" />
@@ -314,7 +322,7 @@ function DashboardContent() {
         <h2 className="heading-md text-[var(--ink)] mb-4">Top Recommendations</h2>
         <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {nearbySchools.slice(0, 3).map((school, idx) => (
-            <div key={idx} className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-[24px] shadow-level-1 border border-[var(--hairline)] p-5 flex flex-col justify-between">
+            <div key={idx} className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] p-5 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-start mb-3">
                   <span className="micro-cap bg-[var(--canvas-soft)] text-[var(--ink)] border border-[var(--hairline)] px-2 py-1 rounded-md shrink-0 font-medium">
@@ -329,7 +337,7 @@ function DashboardContent() {
               </div>
               <Link 
                 href={`/dashboard/find?apply=${school.id}`}
-                className="w-full bg-[var(--primary)] text-white h-10 rounded-pill flex items-center justify-center button-sm hover:bg-[var(--primary-press)] transition-colors"
+                className="w-full bg-[var(--primary)] text-white h-10 rounded-full flex items-center justify-center button-sm hover:bg-[var(--primary-press)] transition-colors"
               >
                 Apply
               </Link>
@@ -337,15 +345,15 @@ function DashboardContent() {
           ))}
           
           {/* Search for More Card */}
-          <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas-soft)] rounded-[24px] border border-[var(--hairline)] border-dashed p-5 flex flex-col items-center justify-center text-center hover:bg-[var(--canvas)] transition-colors">
+          <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas-soft)] rounded-2xl border border-[var(--hairline)] border-dashed p-5 flex flex-col items-center justify-center text-center hover:bg-[var(--canvas-soft-2)] transition-colors">
             <div className="w-12 h-12 rounded-full bg-[var(--canvas)] border border-[var(--hairline)] shadow-sm flex items-center justify-center mb-4">
               <Map className="w-6 h-6 text-[var(--primary)]" />
             </div>
             <h3 className="body-md font-medium text-[var(--ink)] mb-1">Search for more</h3>
-            <p className="caption text-[var(--ink-mute)] mb-4">Browse the full map to find your perfect fit.</p>
+            <p className="caption text-[var(--ink-secondary)] font-medium mb-4">Browse the full map to find your perfect fit.</p>
             <Link 
               href="/dashboard/find"
-              className="w-full bg-white text-[var(--ink)] border border-[var(--hairline)] h-10 rounded-pill flex items-center justify-center button-sm hover:border-[var(--ink-mute)] transition-colors"
+              className="w-full bg-[var(--ink)] text-white h-10 rounded-full flex items-center justify-center button-sm hover:bg-[var(--ink-secondary)] transition-colors"
             >
               Explore Directory
             </Link>
@@ -354,7 +362,7 @@ function DashboardContent() {
       </div>
 
       {/* Row 2: Application Pipeline (Table on Desktop, Cards on Mobile) */}
-      <div className="mb-8 bg-[var(--canvas)] rounded-[24px] shadow-level-1 border border-[var(--hairline)] overflow-visible">
+      <div className="mb-8 bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] overflow-visible">
         <div className="p-4 sm:p-6 border-b border-[var(--hairline)] flex items-center justify-between">
           <h2 className="heading-md text-[var(--ink)]">Active Applications</h2>
           <Link href="/dashboard/applications" className="button-sm text-[var(--primary)] hover:text-[var(--primary-deep)] shrink-0 ml-4">View all</Link>
@@ -383,9 +391,9 @@ function DashboardContent() {
                   <td className="py-4 px-6">
                     <span className={`pill-tag-soft ${
                       app.stage === 'Accepted' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
-                      app.stage === 'Opened' ? 'bg-blue-100 text-blue-700' :
-                      app.stage === 'Replied' ? 'bg-purple-100 text-purple-700' :
-                      app.stage === 'Interview' ? 'bg-[var(--primary-subdued)]/30 text-[var(--primary-deep)]' :
+                      app.stage === 'Opened' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
+                      app.stage === 'Replied' ? 'bg-[var(--canvas-soft-2)] text-[var(--ink)] border border-[var(--hairline)]' :
+                      app.stage === 'Interview' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
                       'bg-[var(--warning)]/10 text-[var(--warning)]'
                     }`}>
                       {app.stage}
@@ -433,14 +441,14 @@ function DashboardContent() {
                             <div className="h-5 bg-[var(--ink-mute)] rounded w-48 animate-pulse" />
                             <div className="h-5 bg-[var(--ink-mute)] rounded w-24 animate-pulse" />
                             <div className="h-5 bg-[var(--ink-mute)] rounded w-24 animate-pulse" />
-                            <div className="h-6 bg-[var(--ink-mute)] rounded-pill w-20 animate-pulse" />
+                            <div className="h-6 bg-[var(--ink-mute)] rounded-full w-20 animate-pulse" />
                             <div className="h-5 bg-[var(--ink-mute)] rounded w-12 animate-pulse" />
                             <div className="h-5 bg-[var(--ink-mute)] rounded w-5 ml-auto animate-pulse" />
                           </div>
                         ))}
                       </div>
                       <Link href="/dashboard/find" className="absolute inset-0 flex items-center justify-center z-10 p-4 group cursor-pointer">
-                        <div className="bg-[var(--canvas)]/80 backdrop-blur-md px-6 py-3 rounded-pill shadow-level-1 border border-[var(--primary)]/30 flex items-center gap-3 group-hover:scale-105 group-hover:shadow-level-2 group-hover:border-[var(--primary)] transition-all duration-300">
+                        <div className="bg-[var(--canvas)]/80 backdrop-blur-md px-6 py-3 rounded-full shadow-level-1 border border-[var(--primary)]/30 flex items-center gap-3 group-hover:scale-105 group-hover:shadow-level-2 group-hover:border-[var(--primary)] transition-all duration-300">
                           <AlertCircle className="w-5 h-5 text-[var(--primary)]" />
                           <p className="body-md font-medium text-[var(--ink)]">
                             We recommend that you begin application for at least <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> schools
@@ -495,9 +503,9 @@ function DashboardContent() {
                 </div>
                 <span className={`pill-tag-soft shrink-0 ${
                   app.stage === 'Accepted' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
-                  app.stage === 'Opened' ? 'bg-blue-100 text-blue-700' :
-                  app.stage === 'Replied' ? 'bg-purple-100 text-purple-700' :
-                  app.stage === 'Interview' ? 'bg-[var(--primary-subdued)]/30 text-[var(--primary-deep)]' :
+                  app.stage === 'Opened' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
+                  app.stage === 'Replied' ? 'bg-[var(--canvas-soft-2)] text-[var(--ink)] border border-[var(--hairline)]' :
+                  app.stage === 'Interview' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
                   'bg-[var(--warning)]/10 text-[var(--warning)]'
                 }`}>
                   {app.stage}
@@ -521,13 +529,13 @@ function DashboardContent() {
                         <div className="h-4 bg-[var(--ink-mute)] rounded w-full animate-pulse" />
                         <div className="h-5 bg-[var(--ink-mute)] rounded w-2/3 animate-pulse" />
                       </div>
-                      <div className="h-6 bg-[var(--ink-mute)] rounded-pill w-20 shrink-0 animate-pulse" />
+                      <div className="h-6 bg-[var(--ink-mute)] rounded-full w-20 shrink-0 animate-pulse" />
                     </div>
                   </div>
                 ))}
               </div>
               <Link href="/dashboard/find" className="absolute inset-0 flex items-center justify-center z-10 p-4 group cursor-pointer">
-                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-[16px] shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 group-hover:scale-105 group-hover:shadow-level-2 group-hover:border-[var(--primary)] transition-all duration-300">
+                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 group-hover:scale-105 group-hover:shadow-level-2 group-hover:border-[var(--primary)] transition-all duration-300">
                   <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                   <p className="body-md font-medium text-[var(--ink)]">
                     We recommend that you begin application for at least <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> schools
@@ -546,7 +554,7 @@ function DashboardContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           
           {/* Left Col (2/3): Document Readiness Matrix */}
-          <div className="lg:col-span-2 bg-[var(--canvas)] rounded-[24px] shadow-level-1 border border-[var(--hairline)] overflow-hidden relative">
+          <div className="lg:col-span-2 bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] overflow-hidden relative">
             <div className={`transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
               <div className="p-4 sm:p-6 border-b border-[var(--hairline)]">
                 <h2 className="heading-md text-[var(--ink)]">Document Readiness</h2>
@@ -580,7 +588,7 @@ function DashboardContent() {
             {/* Section Overlay */}
             {!hasMetMinimum && (
               <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-[16px] shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
+                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
                   <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                   <p className="body-md font-medium text-[var(--ink)]">
                     Unlock <span className="font-bold text-[var(--ink)]">Readiness</span> by applying to <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> more school{remainingSlots > 1 ? 's' : ''}.
@@ -591,7 +599,7 @@ function DashboardContent() {
           </div>
 
           {/* Right Col (1/3): Communication Inbox */}
-          <div className="bg-[var(--canvas)] rounded-[24px] shadow-level-1 border border-[var(--hairline)] flex flex-col relative overflow-hidden">
+          <div className="bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] flex flex-col relative overflow-hidden">
             <div className={`flex flex-col h-full transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
               <div className="p-4 sm:p-6 border-b border-[var(--hairline)] flex items-center justify-between">
                 <h2 className="heading-md text-[var(--ink)]">Inbox</h2>
@@ -641,13 +649,13 @@ function DashboardContent() {
                     </div>
                   );
                 }) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-                    <div className="w-16 h-16 rounded-full bg-[var(--canvas-soft)] flex items-center justify-center mb-4">
-                      <MessageSquare className="w-8 h-8 text-[var(--ink-mute)]" />
+                  <div className="flex flex-col items-center justify-center py-12 text-center px-6 m-2 border border-[var(--hairline)] bg-[var(--canvas-soft)] rounded-2xl">
+                    <div className="w-16 h-16 rounded-full bg-[var(--canvas-soft-2)] border border-[var(--hairline)] flex items-center justify-center mb-4 text-[var(--ink)]">
+                      <MessageSquare className="w-8 h-8" />
                     </div>
                     <h3 className="body-md font-semibold text-[var(--ink)] mb-1">No messages yet</h3>
-                    <p className="caption text-[var(--ink-mute)] mb-4">Your inbox is empty. Apply to schools to start receiving updates here.</p>
-                    <Link href="/dashboard/search" className="button-sm bg-[var(--primary)] text-white hover:bg-[var(--primary-deep)] px-4 py-2 rounded-pill transition-colors inline-block">
+                    <p className="caption text-[var(--ink-secondary)] font-medium mb-4">Your inbox is empty. Apply to schools to start receiving updates here.</p>
+                    <Link href="/dashboard/search" className="button-sm bg-[var(--ink)] text-white hover:bg-[var(--ink-secondary)] px-4 py-2 rounded-full transition-colors inline-block">
                       Find Schools
                     </Link>
                   </div>
@@ -666,7 +674,7 @@ function DashboardContent() {
             {/* Section Overlay */}
             {!hasMetMinimum && (
               <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-[16px] shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
+                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
                   <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                   <p className="body-md font-medium text-[var(--ink)]">
                     Unlock <span className="font-bold text-[var(--ink)]">Inbox</span> by applying to <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> more school{remainingSlots > 1 ? 's' : ''}.
@@ -679,7 +687,7 @@ function DashboardContent() {
         </div>
 
         {/* Row 4: Placement Analytics */}
-        <div className="bg-[var(--canvas)] rounded-[24px] shadow-level-1 border border-[var(--hairline)] relative overflow-hidden">
+        <div className="bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] relative overflow-hidden">
           <div className={`p-5 sm:p-8 transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
             <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
@@ -693,7 +701,7 @@ function DashboardContent() {
                 {/* 1. Funnel Visualizer */}
                 <div>
                   <h3 className="body-md font-semibold text-[var(--ink)] mb-4">Application Funnel</h3>
-                  <div className="flex w-full h-8 rounded-pill overflow-hidden bg-[var(--canvas-soft)] border border-[var(--hairline)]">
+                  <div className="flex w-full h-8 rounded-full overflow-hidden bg-[var(--canvas-soft)] border border-[var(--hairline)]">
                     {analytics.total_applications > 0 ? (
                       <>
                         <div 
@@ -708,7 +716,7 @@ function DashboardContent() {
                         />
                         <div 
                           style={{ width: `${(analytics.replied_count / analytics.total_applications) * 100}%` }} 
-                          className="h-full bg-purple-500/40 transition-all duration-1000 group relative border-r border-[var(--canvas)]"
+                          className="h-full bg-[var(--canvas-soft-2)] transition-all duration-1000 group relative border-r border-[var(--hairline)]"
                           title={`Replied: ${analytics.replied_count}`}
                         />
                         <div 
@@ -729,7 +737,7 @@ function DashboardContent() {
                   <div className="flex flex-wrap items-center gap-4 mt-4">
                     <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[var(--ink-mute)]/20" /><span className="micro-cap text-[var(--ink-mute)]">Pending ({analytics.pending_count})</span></div>
                     <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-blue-500/40" /><span className="micro-cap text-[var(--ink-mute)]">Opened ({analytics.opened_count + analytics.replied_count + analytics.accepted_count + analytics.rejected_count})</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-purple-500/40" /><span className="micro-cap text-[var(--ink-mute)]">Replied ({analytics.replied_count})</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[var(--canvas-soft-2)] border border-[var(--hairline)]" /><span className="micro-cap text-[var(--ink-mute)]">Replied ({analytics.replied_count})</span></div>
                     <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[var(--success)]" /><span className="micro-cap text-[var(--ink-mute)]">Accepted ({analytics.accepted_count})</span></div>
                     <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[var(--warning)]" /><span className="micro-cap text-[var(--ink-mute)]">Rejected ({analytics.rejected_count})</span></div>
                   </div>
@@ -737,22 +745,22 @@ function DashboardContent() {
 
                 {/* 2. Key Metrics Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="bg-[var(--canvas-soft)] p-4 rounded-[16px] border border-[var(--hairline)] flex flex-col justify-center">
+                  <div className="bg-[var(--canvas-soft)] p-4 rounded-2xl border border-[var(--hairline)] flex flex-col justify-center">
                     <span className="caption text-[var(--ink-mute)] mb-1">Acceptance Rate</span>
                     <span className={`heading-md ${analytics.acceptance_rate > 50 ? 'text-[var(--success)]' : 'text-[var(--ink)]'}`}>{analytics.acceptance_rate}%</span>
                   </div>
-                  <div className="bg-[var(--canvas-soft)] p-4 rounded-[16px] border border-[var(--hairline)] flex flex-col justify-center">
+                  <div className="bg-[var(--canvas-soft)] p-4 rounded-2xl border border-[var(--hairline)] flex flex-col justify-center">
                     <span className="caption text-[var(--ink-mute)] mb-1">Avg Match Score</span>
                     <span className="heading-md text-[var(--ink)]">{analytics.avg_match_score}%</span>
                   </div>
-                  <div className="bg-[var(--canvas-soft)] p-4 rounded-[16px] border border-[var(--hairline)] flex flex-col justify-center col-span-2 md:col-span-1">
+                  <div className="bg-[var(--canvas-soft)] p-4 rounded-2xl border border-[var(--hairline)] flex flex-col justify-center col-span-2 md:col-span-1">
                     <span className="caption text-[var(--ink-mute)] mb-1">Top Targeted Region</span>
                     <span className="heading-md text-[var(--ink)] truncate">{analytics.top_region}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="py-12 flex flex-col items-center justify-center bg-[var(--canvas-soft)] rounded-[16px] border border-dashed border-[var(--hairline)]">
+              <div className="py-12 flex flex-col items-center justify-center bg-[var(--canvas-soft)] rounded-2xl border border-dashed border-[var(--hairline)]">
                 <AlertCircle className="w-8 h-8 text-[var(--warning)] mb-3" />
                 <h3 className="body-md font-medium text-[var(--ink)] mb-1">Backend Update Required</h3>
                 <p className="caption text-[var(--ink-mute)] max-w-sm text-center">
@@ -765,7 +773,7 @@ function DashboardContent() {
           {/* Section Overlay */}
           {!hasMetMinimum && (
             <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-              <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-[16px] shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
+              <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
                 <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                 <p className="body-md font-medium text-[var(--ink)]">
                   Unlock <span className="font-bold text-[var(--ink)]">Analytics</span> by applying to <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> more school{remainingSlots > 1 ? 's' : ''}.

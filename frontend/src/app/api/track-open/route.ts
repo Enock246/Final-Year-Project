@@ -36,7 +36,8 @@ export async function GET(req: Request) {
         .eq('id', applicationId);
 
       // Create an inbox message for the student
-      const schoolName = application.schools?.name || 'The school';
+      const schoolData = application.schools as any;
+      const schoolName = (Array.isArray(schoolData) ? schoolData[0]?.name : schoolData?.name) || 'The school';
       await supabase.from('inbox_messages').insert([{
         student_id: application.student_id,
         application_id: application.id,

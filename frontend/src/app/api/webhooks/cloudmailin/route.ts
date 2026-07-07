@@ -55,7 +55,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, reason: 'Application not found' });
     }
 
-    const schoolName = appData.schools?.name || cleanSender;
+    const schoolData = appData.schools as any;
+    const schoolName = (Array.isArray(schoolData) ? schoolData[0]?.name : schoolData?.name) || cleanSender;
 
     // Insert the reply into the Inbox Messages table
     const { error: insertError } = await supabase.from('inbox_messages').insert([

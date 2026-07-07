@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { X, CheckCircle2, ChevronRight, Loader2, Send, Edit3, FileText, ArrowLeft, Mail } from 'lucide-react';
+import { X, CheckCircle2, ChevronRight, Loader2, Send, Edit3, FileText, ArrowLeft, Mail, Printer } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ApplicationWizardModalProps {
   isOpen: boolean;
   onClose: () => void;
   school: any;
+  hasApplied?: boolean;
 }
 
-export default function ApplicationWizardModal({ isOpen, onClose, school }: ApplicationWizardModalProps) {
+export default function ApplicationWizardModal({ isOpen, onClose, school, hasApplied }: ApplicationWizardModalProps) {
   const [step, setStep] = useState(1);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [studentProfile, setStudentProfile] = useState<any>(null);
@@ -24,6 +26,10 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
   const [sending, setSending] = useState(false);
   const [sendChecklist, setSendChecklist] = useState<boolean[]>([false, false, false, false]);
   const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  
+  const [hasLocalDraft, setHasLocalDraft] = useState<boolean>(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   // Inline Editing State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -49,40 +55,52 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && school) {
+      if (hasApplied) {
+        alert("You already have an active application to this school.");
+        onClose();
+        return;
+      }
+      
       setStep(1);
       setSent(false);
       setLetterContent('');
       setGenChecklist([false, false, false, false, false]);
       setSendChecklist([false, false, false, false]);
+      setSendError(null);
       setCvFile(null);
       setTranscriptFile(null);
       setPlacementFile(null);
+      
+      // Load draft from localStorage
+      const savedDraft = localStorage.getItem(`draft_${school.id}`);
+      if (savedDraft) {
+        setLetterContent(savedDraft);
+        setHasLocalDraft(true);
+      } else {
+        setHasLocalDraft(false);
+      }
+      
       fetchProfile();
     }
-  }, [isOpen]);
+  }, [isOpen, school.id]);
 
   const fetchProfile = async () => {
     setLoadingProfile(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Fetch Profile
         const { data: profile, error } = await supabase
           .from('student_profiles')
-          .select(`
-            *,
-            students ( full_name, email )
-          `)
+          .select(`*, students ( full_name, email )`)
           .eq('student_id', user.id)
           .single();
         
         if (!error && profile) {
           setStudentProfile(profile);
         } else {
-          console.error("Profile fetch error:", error);
-          // Fallback if no profile is found, just use the user object
           setStudentProfile({
-            fetchError: error?.message || 'Unknown error',
             students: {
               full_name: user.user_metadata?.full_name || 'Student',
               email: user.email || ''
@@ -182,7 +200,26 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
     setUploadingDocs(false);
   };
 
+  const handleAutoSave = (content: string) => {
+    setLetterContent(content);
+    setSaveStatus('saving');
+    try {
+      localStorage.setItem(`draft_${school.id}`, content);
+      setHasLocalDraft(true);
+      setSaveStatus('saved');
+    } catch (err) {
+      console.error("Failed to save draft to localStorage:", err);
+      setSaveStatus('idle');
+    }
+  };
+
   const startAIGeneration = async () => {
+    if (hasLocalDraft && letterContent) {
+      // If we already have a draft loaded, just jump straight to step 2!
+      setStep(2);
+      return;
+    }
+
     setStep(2);
     setGenerating(true);
     
@@ -216,12 +253,17 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
       });
       
       const data = await res.json();
+      const letter = data.letter || 'Failed to generate letter.';
       
+      // Save it to localStorage instantly
+      localStorage.setItem(`draft_${school.id}`, letter);
+      setHasLocalDraft(true);
+
       // Wait at least until the last checklist item finishes before showing the letter
       setTimeout(() => {
-        setLetterContent(data.letter || 'Failed to generate letter.');
+        setLetterContent(letter);
         setGenerating(false);
-      }, 5000);
+      }, Math.max(0, 5000 - timings[4]));
       
     } catch (err) {
       console.error(err);
@@ -234,6 +276,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
 
   const sendApplication = async () => {
     setSending(true);
+    setSendError(null);
     setSendChecklist([false, false, false, false]);
     
     // Simulate email sending steps to give user feedback
@@ -256,7 +299,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
       if (studentProfile?.transcript_file_path) attachedDocs.push({ name: 'Academic Transcript', path: studentProfile.transcript_file_path });
       if (studentProfile?.placement_letter_path) attachedDocs.push({ name: 'Placement Letter', path: studentProfile.placement_letter_path });
 
-      await fetch('/api/send-application', {
+      const res = await fetch('/api/send-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -271,33 +314,94 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
         })
       });
       
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || 'Failed to send application');
+      }
+      
       setSendChecklist(prev => {
         const next = [...prev];
         next[3] = true;
         return next;
       });
       
+      // Clean up localStorage on successful send
+      localStorage.removeItem(`draft_${school.id}`);
+      setHasLocalDraft(false);
+      
       setTimeout(() => {
         setSent(true);
         setSending(false);
       }, 1000);
       
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setSendError(err.message || 'An unexpected error occurred while sending');
       setSending(false);
     }
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Internship Application - ${school?.name || 'School'}</title>
+          <style>
+            @media print {
+              @page { margin: 0; }
+              body { margin: 1.6cm; }
+            }
+            body { font-family: 'Times New Roman', Times, serif; padding: 40px; line-height: 1.6; color: black; max-width: 800px; margin: 0 auto; font-size: 12pt; }
+            .header { text-align: center; border-bottom: 2px solid black; padding-bottom: 20px; margin-bottom: 40px; }
+            h1 { font-size: 24px; text-transform: uppercase; margin: 0 0 5px 0; font-weight: bold; }
+            h2 { font-size: 16px; margin: 0 0 10px 0; font-weight: normal; }
+            .subtitle { font-style: italic; font-size: 14px; }
+            .content { font-size: 12pt; white-space: pre-wrap; margin-bottom: 60px; text-align: justify; }
+            .signature { margin-top: 60px; }
+            .sign-line { margin-bottom: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Akenten Appiah-Menka University</h1>
+            <h2>of Skills Training and Entrepreneurial Development</h2>
+            <div class="subtitle">Official Internship Placement Request</div>
+          </div>
+          <div class="content">${letterContent}</div>
+          <div class="signature">
+            <div class="sign-line">___________________________</div>
+            <strong>${studentProfile?.students?.full_name || 'Student Name'}</strong><br/>
+            Student, AAMUSTED
+          </div>
+          <script>
+            window.onload = () => { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
-      <div 
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={step === 1 ? onClose : undefined} 
       />
       
-      <div className="relative w-full max-w-[800px] max-h-[90vh] bg-white rounded-[24px] sm:rounded-[32px] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <motion.div 
+        layout
+        initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+        animate={{ opacity: 1, scale: 1, y: 0 }} 
+        transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+        className="relative w-full max-w-[800px] max-h-[90vh] bg-white rounded-[24px] sm:rounded-[32px] flex flex-col shadow-2xl overflow-hidden"
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[var(--hairline)] shrink-0 bg-white">
@@ -331,7 +435,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 bg-[var(--canvas)]">
+        <motion.div layout className="flex-1 overflow-y-auto p-6 bg-[var(--canvas)]">
           
           {/* STEP 1: REVIEW PROFILE */}
           {step === 1 && (
@@ -555,12 +659,22 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
               ) : (
                 <div className="bg-white border border-[var(--hairline)] rounded-2xl shadow-sm overflow-hidden flex flex-col h-[500px]">
                   <div className="p-4 border-b border-[var(--hairline)] bg-[var(--canvas-soft)] flex justify-between items-center">
-                    <span className="text-[13px] font-semibold text-[var(--ink-mute)] uppercase tracking-wider">Application Letter</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[13px] font-semibold text-[var(--ink-mute)] uppercase tracking-wider">Application Letter</span>
+                      {saveStatus === 'saving' && <span className="text-[11px] text-[var(--ink-mute)] flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Saving...</span>}
+                      {saveStatus === 'saved' && <span className="text-[11px] text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Saved locally</span>}
+                    </div>
                     <span className="text-[12px] bg-[var(--primary-light)] text-[var(--primary-deep)] px-2 py-1 rounded font-medium">AI Generated</span>
                   </div>
                   <textarea 
                     value={letterContent}
-                    onChange={(e) => setLetterContent(e.target.value)}
+                    onChange={(e) => {
+                      setLetterContent(e.target.value);
+                      // Simple inline debounce
+                      setSaveStatus('saving');
+                      clearTimeout((window as any).draftTimeout);
+                      (window as any).draftTimeout = setTimeout(() => handleAutoSave(e.target.value), 1000);
+                    }}
                     className="flex-1 w-full p-6 text-[15px] leading-relaxed text-[var(--ink)] resize-none outline-none focus:ring-inset focus:ring-2 focus:ring-[var(--primary)]"
                     placeholder="Write your letter here..."
                   />
@@ -584,7 +698,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
                   
                   <div className="bg-[var(--canvas-soft)] rounded-xl p-6 text-left border border-[var(--hairline)] mb-8 space-y-4">
                     <div className="flex gap-4 items-start">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--canvas-soft-2)] border border-[var(--hairline)] flex items-center justify-center text-[var(--ink)] shrink-0 mt-0.5">
                         <Mail className="w-4 h-4" />
                       </div>
                       <div>
@@ -593,7 +707,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
                       </div>
                     </div>
                     <div className="flex gap-4 items-start">
-                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--canvas-soft-2)] border border-[var(--hairline)] flex items-center justify-center text-[var(--ink)] shrink-0 mt-0.5">
                         <Loader2 className="w-4 h-4" />
                       </div>
                       <div>
@@ -602,7 +716,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
                       </div>
                     </div>
                     <div className="flex gap-4 items-start">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--canvas-soft-2)] border border-[var(--hairline)] flex items-center justify-center text-[var(--ink)] shrink-0 mt-0.5">
                         <CheckCircle2 className="w-4 h-4" />
                       </div>
                       <div>
@@ -678,20 +792,25 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
                         </li>
                       </ul>
                     </div>
+                    {sendError && (
+                      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-[14px] font-medium flex items-center gap-2">
+                        <X className="w-5 h-5 shrink-0" />
+                        {sendError}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
           )}
-
-        </div>
+        </motion.div>
 
         {/* Footer Actions */}
         {!sent && (
           <div className="p-6 border-t border-[var(--hairline)] bg-white shrink-0 flex justify-end gap-3">
             <button 
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl font-medium text-[var(--ink-mute)] hover:bg-[var(--canvas-soft)] transition-colors"
+              className="pressable px-6 py-2.5 rounded-xl font-medium text-[var(--ink-mute)] hover:bg-[var(--canvas-soft)] transition-colors"
             >
               Cancel
             </button>
@@ -700,26 +819,34 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
               <button 
                 onClick={startAIGeneration}
                 disabled={loadingProfile}
-                className="px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
+                className="pressable px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
               >
-                Generate Letter <ChevronRight className="w-4 h-4" />
+                {hasLocalDraft ? 'Continue Saved Draft' : 'Generate Letter'} <ChevronRight className="w-4 h-4" />
               </button>
             )}
             
             {step === 2 && !generating && (
-              <button 
-                onClick={() => setStep(3)}
-                className="px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors"
-              >
-                Continue <ChevronRight className="w-4 h-4" />
-              </button>
+              <>
+                <button 
+                  onClick={handlePrint}
+                  className="pressable px-6 py-2.5 rounded-xl bg-white border border-[var(--hairline)] text-[var(--ink)] font-semibold flex items-center gap-2 hover:bg-[var(--canvas-soft)] transition-colors shadow-sm"
+                >
+                  <Printer className="w-4 h-4" /> Print Letter
+                </button>
+                <button 
+                  onClick={() => setStep(3)}
+                  className="pressable px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors"
+                >
+                  Continue <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
             )}
 
             {step === 3 && (
               <button 
                 onClick={sendApplication}
                 disabled={sending}
-                className="px-8 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
+                className="pressable px-8 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
               >
                 {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
                 {sending ? 'Sending...' : 'Send Application'}
@@ -727,7 +854,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school }: Appl
             )}
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

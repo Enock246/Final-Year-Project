@@ -19,12 +19,13 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = generateRequestSchema.parse(body);
 
+    const skills = parsed.studentProfile.key_skills_and_offerings?.length 
+      ? parsed.studentProfile.key_skills_and_offerings.join(', ') 
+      : 'education and youth development';
+
     // If no API key, return a mock letter to save developer time
     if (!process.env.GEMINI_API_KEY) {
       await new Promise(resolve => setTimeout(resolve, 4000)); // Simulate AI generation delay
-      const skills = parsed.studentProfile.key_skills_and_offerings?.length 
-        ? parsed.studentProfile.key_skills_and_offerings.join(', ') 
-        : 'education and youth development';
 
       const mockLetter = `Dear Hiring Manager at ${parsed.schoolDetails.name},
 
@@ -44,13 +45,20 @@ ${parsed.studentProfile.full_name}`;
       apiKey: process.env.GEMINI_API_KEY,
     });
 
-    const prompt = `Write a professional application letter for a university student seeking a teaching placement (internship).
+    const prompt = `Write a highly concise, human-sounding application letter for a university student seeking a teaching placement (internship).
 Student Name: ${parsed.studentProfile.full_name}
-Skills/Offerings: ${parsed.studentProfile.key_skills_and_offerings?.join(', ') || 'General education background'}
+Skills/Offerings: ${skills}
 Target School: ${parsed.schoolDetails.name}
 School Location: ${parsed.schoolDetails.town_city || 'Ghana'}
 
-The tone should be highly professional, persuasive, and customized based on the provided details. Output ONLY the raw letter text with standard letter formatting (salutation, body paragraphs, sign-off). Do not include placeholder blocks like [Address] or [Date] - just the core letter content. Make it sound eager but professional.`;
+Rules for the letter:
+1. Sound completely human, natural, and humble. Do NOT use overly flowery AI language (e.g., "esteemed institution", "profound interest", "delve into").
+2. Go straight to the point. Do not beat around the bush.
+3. Be very concise (maximum 2-3 short paragraphs).
+4. Center the entire letter strictly on the request to do an internship/teaching placement at their institution.
+5. You MUST explicitly state that the student is studying at "Akenten Appiah-Menka University of Skills Training and Entrepreneurial Development (AAMUSTED)".
+6. Do NOT use bullet points. Keep it in natural paragraph form.
+7. Do NOT include any placeholders for dates (like [Start Date] or [Address]). Output ONLY the raw letter text with a standard salutation and sign-off.`;
 
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -61,7 +69,7 @@ The tone should be highly professional, persuasive, and customized based on the 
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request data', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request data', details: (error as any).errors }, { status: 400 });
     }
     console.error('Error generating application:', error);
     return NextResponse.json({ error: 'Failed to generate application' }, { status: 500 });

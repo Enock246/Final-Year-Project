@@ -3,8 +3,24 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { z } from 'zod';
 
-export async function updateProfile(data: any) {
+// Security Review: Strict input validation schemas with .strip() to prevent Mass Assignment
+const profileSchema = z.object({
+  region_name: z.string().optional(),
+  district_name: z.string().optional(),
+  town_city: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  transport_preference: z.enum(['OWN', 'PUBLIC', 'ARRANGE', 'WALKING']).optional(),
+  max_commute_minutes: z.number().min(1).max(300).optional(),
+  key_skills_and_offerings: z.array(z.string()).optional(),
+  cv_file_path: z.string().optional(),
+  transcript_file_path: z.string().optional(),
+  placement_letter_path: z.string().optional(),
+}).strip();
+
+export async function updateProfile(rawData: any) {
   const supabase = await createClient();
   
   let user = null;
@@ -13,9 +29,17 @@ export async function updateProfile(data: any) {
     if (userError || !data.user) return { error: 'Unauthorized' };
     user = data.user;
   } catch (err) {
-    console.error("Action Supabase fetch error:", err);
+    console.error("Action Supabase fetch error (Redacted)");
     return { error: 'Network error verifying session' };
   }
+
+  // Validate Input
+  const parseResult = profileSchema.safeParse(rawData);
+  if (!parseResult.success) {
+    console.error('Validation failed during profile update', parseResult.error);
+    return { error: 'Invalid profile data provided' };
+  }
+  const data = parseResult.data;
 
   // Ensure the base students record exists to prevent FK errors
   const { error: studentErr } = await supabase
@@ -27,7 +51,7 @@ export async function updateProfile(data: any) {
     }, { onConflict: 'id' });
     
   if (studentErr) {
-    console.error('Failed to upsert base student record:', studentErr);
+    console.error('Failed to upsert base student record (Redacted)');
   }
 
   // Extract custom fields for location mapping
@@ -66,7 +90,7 @@ export async function updateProfile(data: any) {
         finalLocation = `POINT(-1.6244 6.6666)`;
       }
     } catch (e) {
-      console.error('Fallback geocode failed:', e);
+      console.error('Fallback geocode failed (Redacted)');
       finalLocation = `POINT(-1.6244 6.6666)`;
     }
   }
@@ -87,14 +111,14 @@ export async function updateProfile(data: any) {
     .upsert(upsertPayload, { onConflict: 'student_id' });
 
   if (error) {
-    console.error('Error updating profile:', error);
-    return { error: error.message };
+    console.error('Error updating profile (Redacted)');
+    return { error: 'Failed to update profile' }; // Sanitized error
   }
 
   return { success: true };
 }
 
-export async function completeProfile(data: any) {
+export async function completeProfile(rawData: any) {
   const supabase = await createClient();
   
   let user = null;
@@ -103,9 +127,17 @@ export async function completeProfile(data: any) {
     if (userError || !data.user) return { error: 'Unauthorized' };
     user = data.user;
   } catch (err) {
-    console.error("Action Supabase fetch error:", err);
+    console.error("Action Supabase fetch error (Redacted)");
     return { error: 'Network error verifying session' };
   }
+
+  // Validate Input
+  const parseResult = profileSchema.safeParse(rawData);
+  if (!parseResult.success) {
+    console.error('Validation failed during profile completion', parseResult.error);
+    return { error: 'Invalid profile data provided' };
+  }
+  const data = parseResult.data;
 
   const { error: studentErr } = await supabase
     .from('students')
@@ -116,20 +148,23 @@ export async function completeProfile(data: any) {
     }, { onConflict: 'id' });
 
   if (studentErr) {
-    console.error('Failed to upsert base student record:', studentErr);
+    console.error('Failed to upsert base student record (Redacted)');
   }
+  
+  // Exclude fields handled manually
+  const { region_name, district_name, latitude, longitude, ...profileData } = data;
 
   const { error } = await supabase
     .from('student_profiles')
     .upsert({
       student_id: user.id,
-      ...data,
+      ...profileData,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'student_id' });
 
   if (error) {
-    console.error('Error completing profile:', error);
-    return { error: error.message };
+    console.error('Error completing profile (Redacted)');
+    return { error: 'Failed to complete profile' }; // Sanitized error
   }
 
   revalidatePath('/dashboard');

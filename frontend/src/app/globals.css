@@ -41,53 +41,35 @@
 
 @layer base {
   :root {
-    /* Keeping CSS vars available for global usage if needed outside tailwind */
-    --primary: #533afd;
-    --primary-deep: #4434d4;
-    --primary-press: #2e2b8c;
-    --primary-soft: #665efd;
-    --primary-bg-subdued-hover: #b9b9f9;
-    --brand-dark-900: #1c1e54;
-    --ink: #0d253d;
-    --ink-secondary: #273951;
-    --ink-mute: #64748d;
-    --ink-mute-2: #61718a;
+    /* Design System Inspired by Google Antigravity */
+    --primary: #3279F9; /* Action Blue */
+    --primary-deep: #1a5fd6; /* Hover State */
+    --primary-press: #0d47a1; /* Active State */
+    --primary-soft: #3279F9;
+    --primary-bg-subdued-hover: rgba(183, 191, 217, 0.09);
+    
+    --brand-dark-900: #121317; /* Deepest Dark */
+    
+    --ink: #121317; /* Primary Dark */
+    --ink-secondary: #212226; /* Secondary Dark */
+    --ink-mute: #45474D; /* Medium Gray */
+    --ink-mute-2: #6A6A71; /* Border Gray / Tertiary */
+    
     --on-primary: #ffffff;
-    --canvas: #ffffff;
-    --canvas-soft: #f6f9fc;
-    --canvas-soft-2: #f3f6f9;
-    --canvas-cream: #f5e9d4;
-    --hairline: #e3e8ee;
-    --hairline-input: #a8c3de;
-    --ruby: #ea2261;
+    --canvas: #ffffff; /* White */
+    --canvas-soft: #F8F9FC; /* Light Neutral */
+    --canvas-soft-2: #EFF2F7; /* Lighter Neutral */
+    --canvas-cream: #E6EAF0; /* Off-White */
+    
+    --hairline: #E1E6EC; /* Light Divider */
+    --hairline-input: #E1E6EC;
+    
+    --ruby: #FF0000; /* Error Red */
     --magenta: #f96bee;
-    --lemon: #9b6829;
-    --shadow-blue: #003770;
-    --success: #00d924;
-    --warning: #ffb800;
-  }
-
-  .dark {
-    --primary: #665efd; /* slightly lighter for dark mode contrast */
-    --primary-deep: #533afd;
-    --primary-press: #4434d4;
-    --primary-soft: #857dfd;
-    --primary-bg-subdued-hover: #1c1e54;
-    
-    --ink: #ffffff;
-    --ink-secondary: #e2e8f0;
-    --ink-mute: #94a3b8;
-    --ink-mute-2: #64748d;
-    
-    --canvas: #0a0a0a;
-    --canvas-soft: #171717;
-    --canvas-soft-2: #262626;
-    --canvas-cream: #262626; /* Dark equivalent */
-    
-    --hairline: #333333;
-    --hairline-input: #404040;
-    
+    --lemon: #F59E0B;
     --shadow-blue: #000000;
+    --success: #2E7D32;
+    --warning: #FFBD35;
   }
 }
 
@@ -100,29 +82,42 @@
 
 @layer utilities {
   .shadow-level-1 {
-    box-shadow: rgba(0, 55, 112, 0.08) 0 1px 3px;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08); /* Elevated */
   }
   .shadow-level-2 {
-    box-shadow: rgba(0, 55, 112, 0.08) 0 8px 24px, rgba(0, 55, 112, 0.04) 0 2px 6px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12); /* Interactive hover */
+  }
+  .shadow-level-3 {
+    box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.16); /* Modal */
+  }
+  .shadow-primary {
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.12); /* Button level 2 */
+  }
+  /* Emil Kowalski style active press states */
+  .pressable {
+    transition: transform 0.15s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.15s ease-out;
+  }
+  .pressable:active {
+    transform: scale(0.975);
   }
 }
 
-/* Apple HIG Typography (Mapped to Stripe Tokens) */
-.display-xxl { @apply text-[56px] font-normal leading-[1.03] tracking-[-1.4px]; }
-.display-xl { @apply text-[48px] font-normal leading-[1.15] tracking-[-0.96px]; }
-.display-lg { @apply text-[32px] font-normal leading-[1.1] tracking-[-0.64px]; }
-.display-md { @apply text-[26px] font-normal leading-[1.12] tracking-[-0.26px]; }
-.heading-lg { @apply text-[22px] font-semibold leading-[1.1] tracking-[-0.22px]; }
-.heading-md { @apply text-[20px] font-semibold leading-[1.4] tracking-[-0.2px]; }
-.heading-sm { @apply text-[18px] font-semibold leading-[1.4] tracking-normal; }
-.body-lg { @apply text-[16px] font-normal leading-[1.4] tracking-normal; }
-.body-md { @apply text-[15px] font-normal leading-[1.4] tracking-normal; }
-.body-tabular { @apply text-[14px] font-normal leading-[1.4] tracking-[-0.42px]; font-feature-settings: "tnum" 1; }
-.button-md { @apply text-[16px] font-semibold leading-[1.0] tracking-normal; }
-.button-sm { @apply text-[14px] font-semibold leading-[1.0] tracking-normal; }
-.caption { @apply text-[13px] font-normal leading-[1.4] tracking-[-0.39px]; font-feature-settings: "tnum" 1; }
-.micro { @apply text-[11px] font-normal leading-[1.4] tracking-normal; }
-.micro-cap { @apply text-[10px] font-medium leading-[1.15] tracking-[0.1px] uppercase; }
+/* Google Antigravity Typography */
+.display-xxl { @apply text-[80px] font-[450] leading-[1.1] tracking-normal; }
+.display-xl { @apply text-[56px] font-[450] leading-[1.1] tracking-normal; }
+.display-lg { @apply text-[42px] font-[450] leading-[1.04] tracking-normal; } 
+.display-md { @apply text-[32px] font-[450] leading-[1.1] tracking-normal; }
+.heading-lg { @apply text-[24px] font-[450] leading-[1.08] tracking-normal; } 
+.heading-md { @apply text-[20px] font-[450] leading-[1.15] tracking-normal; }
+.heading-sm { @apply text-[18px] font-[450] leading-[1.15] tracking-normal; }
+.body-lg { @apply text-[16px] font-[400] leading-[1.5] tracking-normal; } 
+.body-md { @apply text-[14.5px] font-[450] leading-[1.45] tracking-normal; } 
+.body-tabular { @apply text-[14.5px] font-[400] leading-[1.45] tracking-normal; font-feature-settings: "tnum" 1; }
+.button-md { @apply text-[16px] font-[450] leading-[1.5] tracking-normal; }
+.button-sm { @apply text-[14.5px] font-[450] leading-[1.45] tracking-normal; }
+.caption { @apply text-[12px] font-[400] leading-[1.33] tracking-normal; }
+.micro { @apply text-[11px] font-[400] leading-[1.4] tracking-normal; }
+.micro-cap { @apply text-[10px] font-[450] leading-[1.15] tracking-[0.1px] uppercase; }
 
 /* Dashboard Hybrid UI specific */
 .glass-nav {
@@ -151,12 +146,13 @@
 }
 
 .button-primary-pill {
-  @apply bg-primary text-white text-[16px] font-semibold leading-[1.0] tracking-normal px-4 py-2 rounded-pill shadow-sm transition-colors;
+  @apply bg-primary text-white text-[14.5px] font-[450] leading-[1.45] tracking-normal px-6 py-3 rounded-full shadow-primary transition-colors;
 }
 .button-primary-pill:hover {
   @apply bg-primary-press;
 }
 
 .text-input {
-  @apply bg-canvas text-ink text-[15px] font-normal leading-[1.4] px-3 py-2 rounded-sm border border-hairline-input focus:outline-none focus:border-primary transition-colors min-h-[40px];
+  @apply bg-canvas text-ink text-[16px] font-normal leading-[1.4] px-4 py-4 rounded-[14px] border border-hairline-input focus:outline-none focus:border-primary transition-colors min-h-[58px];
+  font-family: var(--font-urbanist);
 }

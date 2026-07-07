@@ -47,16 +47,16 @@ export default function ApplicationsPage() {
         
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           {/* Segmented Control */}
-          <div className="flex bg-[var(--canvas-soft)] border border-[var(--hairline)] rounded-xl p-1 w-full sm:w-auto">
+          <div className="flex bg-[var(--canvas-soft)] border border-[var(--hairline)] rounded-md p-1 w-full sm:w-auto">
             <button 
               onClick={() => setFilter('Active')}
-              className={`flex-1 sm:flex-none px-8 py-2.5 rounded-lg text-[14px] font-medium transition-all ${filter === 'Active' ? 'bg-white text-[var(--ink)] shadow-sm border border-[var(--hairline)]' : 'text-[var(--ink-mute)] hover:bg-[var(--hairline)] border border-transparent'}`}
+              className={`flex-1 sm:flex-none px-8 py-2.5 rounded-md text-[14px] font-medium transition-all ${filter === 'Active' ? 'bg-white text-[var(--ink)] shadow-level-1 border-transparent' : 'text-[var(--ink-mute)] hover:bg-[var(--hairline)] border border-transparent'}`}
             >
               Active
             </button>
             <button 
               onClick={() => setFilter('Past')}
-              className={`flex-1 sm:flex-none px-8 py-2.5 rounded-lg text-[14px] font-medium transition-all ${filter === 'Past' ? 'bg-white text-[var(--ink)] shadow-sm border border-[var(--hairline)]' : 'text-[var(--ink-mute)] hover:bg-[var(--hairline)] border border-transparent'}`}
+              className={`flex-1 sm:flex-none px-8 py-2.5 rounded-md text-[14px] font-medium transition-all ${filter === 'Past' ? 'bg-white text-[var(--ink)] shadow-level-1 border-transparent' : 'text-[var(--ink-mute)] hover:bg-[var(--hairline)] border border-transparent'}`}
             >
               Past
             </button>
@@ -64,7 +64,7 @@ export default function ApplicationsPage() {
           
           <Link 
             href="/dashboard/find" 
-            className="flex items-center justify-center w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white text-[14px] font-semibold shadow-sm hover:bg-[var(--primary-deep)] transition-all"
+            className="flex items-center justify-center w-full sm:w-auto px-6 py-2.5 rounded-full bg-[var(--primary)] text-white text-[14px] font-semibold shadow-sm hover:bg-[var(--primary-deep)] transition-all"
           >
             New Application
           </Link>
@@ -85,10 +85,10 @@ export default function ApplicationsPage() {
               <div 
                 key={app.application_id}
                 onClick={() => { setSelectedApp(app); setIsDrawerOpen(true); }}
-                className="bg-white rounded-[24px] border border-[var(--hairline)] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:shadow-level-2 hover:border-transparent transition-all cursor-pointer"
+                className="bg-white rounded-2xl border border-[var(--hairline)] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:shadow-level-2 hover:border-transparent transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-[16px] bg-[var(--canvas-soft)] border border-[var(--hairline)] text-[var(--ink)] flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="w-16 h-16 rounded-md bg-[var(--canvas-soft)] border border-[var(--hairline)] text-[var(--ink)] flex items-center justify-center shrink-0 overflow-hidden">
                     {app.logo_url ? (
                       <img src={app.logo_url} alt="Logo" className="w-full h-full object-cover" />
                     ) : (
@@ -126,7 +126,7 @@ export default function ApplicationsPage() {
             ))}
 
             {displayApps.length === 0 && (
-              <div className="py-24 text-center bg-white rounded-[24px] border border-[var(--hairline)] border-dashed">
+              <div className="py-24 text-center bg-white rounded-2xl border border-[var(--hairline)] border-dashed">
                 <div className="w-16 h-16 bg-[var(--canvas-soft)] rounded-full flex items-center justify-center mx-auto mb-6">
                   <Building className="w-8 h-8 text-[var(--ink-mute)]" />
                 </div>
