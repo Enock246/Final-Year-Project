@@ -20,9 +20,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [userProfile, setUserProfile] = useState<{name: string, email: string, initial: string} | null>(null);
 
   useEffect(() => {
     setMounted(true);
+
+    async function fetchUser() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: student } = await supabase.from('students').select('full_name').eq('id', user.id).single();
+        const name = student?.full_name || 'Student';
+        setUserProfile({
+          name: name,
+          email: user.email || '',
+          initial: name.charAt(0).toUpperCase()
+        });
+      }
+    }
+    fetchUser();
   }, []);
 
   const handleSignOut = async () => {
@@ -118,12 +134,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className={`flex items-center ${isCollapsed && !mobileMenuOpen ? 'justify-center' : 'justify-between'} px-2 py-2 group cursor-pointer rounded-md hover:bg-canvas-soft transition-colors`}>
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-9 h-9 rounded-full bg-primary-subdued flex items-center justify-center text-primary-deep text-sm font-semibold shrink-0">
-                K
+                {userProfile ? userProfile.initial : 'S'}
               </div>
               {(!isCollapsed || mobileMenuOpen) && (
                 <div className="min-w-0 animate-in fade-in">
-                  <p className="body-md font-semibold text-ink truncate">Kwame Mensah</p>
-                  <p className="micro text-ink-mute truncate">kwame@student...</p>
+                  <p className="body-md font-semibold text-ink truncate">
+                    {userProfile ? userProfile.name : 'Loading...'}
+                  </p>
+                  <p className="micro text-ink-mute truncate">
+                    {userProfile ? userProfile.email : ''}
+                  </p>
                 </div>
               )}
             </div>

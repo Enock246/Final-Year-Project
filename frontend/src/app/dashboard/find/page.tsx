@@ -37,6 +37,9 @@ type School = {
   school_lng?: number | null;
   student_lat?: number | null;
   student_lng?: number | null;
+  head_name?: string;
+  postal_address?: string;
+  programs_offered?: string[];
 };
 
 const formatMatchScore = (score: number) => {
@@ -385,7 +388,7 @@ function NewApplicationContent() {
                       show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", bounce: 0.3, duration: 0.6 } }
                     }}
                     key={school.id}
-                    className="bg-[var(--canvas-soft)] rounded-2xl border border-[var(--hairline)] p-6 sm:p-8 hover:shadow-level-2 hover:border-[var(--hairline-input)] pressable hover:-translate-y-1.5 cursor-pointer flex flex-col group relative overflow-hidden"
+                    className="bg-[var(--canvas-soft)] rounded-2xl border border-[var(--hairline)] p-6 sm:p-8 hover:shadow-none hover:border-[var(--hairline-input)] pressable hover:-translate-y-1.5 cursor-pointer flex flex-col group relative overflow-hidden"
                     onClick={() => setSelectedSchool(school)}
                   >
                     <div className="flex items-start gap-5">
@@ -529,6 +532,19 @@ function NewApplicationContent() {
                       </div>
                     </section>
 
+                    {selectedSchool.programs_offered && selectedSchool.programs_offered.length > 0 && (
+                      <section>
+                        <h3 className="heading-md text-[var(--ink)] mb-4">Programs Offered</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSchool.programs_offered.map((program, idx) => (
+                            <span key={idx} className="px-3 py-1.5 bg-[var(--canvas-soft)] border border-[var(--hairline)] text-[var(--ink)] text-[14px] rounded-lg shadow-sm font-medium">
+                              {program}
+                            </span>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
                     {/* Moved Location Section to Left Column */}
                     <section className="bg-white border border-[var(--hairline)] rounded-[20px] p-6 shadow-sm flex flex-col">
                       <h3 className="text-[14px] font-bold text-[var(--ink)] mb-4 uppercase tracking-wider">Location</h3>
@@ -596,11 +612,31 @@ function NewApplicationContent() {
                           </div>
                         ) : null}
 
-                        {!selectedSchool.contact_email && !selectedSchool.contact_phone && (
+                        {!selectedSchool.contact_email && !selectedSchool.contact_phone && !selectedSchool.postal_address && (
                           <p className="text-[14px] text-[var(--ink-mute)] italic">No contact information available.</p>
                         )}
                       </div>
                     </section>
+
+                    {selectedSchool.head_name || selectedSchool.postal_address ? (
+                      <section className="bg-white border border-[var(--hairline)] rounded-[20px] p-6 shadow-sm">
+                        <h3 className="text-[14px] font-bold text-[var(--ink)] mb-4 uppercase tracking-wider">Administration</h3>
+                        <div className="space-y-4">
+                          {selectedSchool.head_name && (
+                            <div className="flex flex-col">
+                              <span className="text-[13px] text-[var(--ink-mute)] mb-1">Head of School</span>
+                              <span className="text-[15px] font-semibold text-[var(--ink)]">{selectedSchool.head_name}</span>
+                            </div>
+                          )}
+                          {selectedSchool.postal_address && (
+                            <div className="flex flex-col">
+                              <span className="text-[13px] text-[var(--ink-mute)] mb-1">Postal Address</span>
+                              <span className="text-[14px] text-[var(--ink)]">{selectedSchool.postal_address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </section>
+                    ) : null}
 
 
                   </div>

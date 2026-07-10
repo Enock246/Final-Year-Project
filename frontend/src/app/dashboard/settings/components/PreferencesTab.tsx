@@ -5,9 +5,32 @@ import { Loader2, CheckCircle2, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { updateProfile } from '@/app/profile/actions';
 
+const PROGRAMMES = [
+  // Technical & Engineering
+  { id: 'B.Sc. Automotive Engineering Technology with Education', category: 'Technical & Engineering' },
+  { id: 'B.Sc. Mechanical Engineering Technology with Education', category: 'Technical & Engineering' },
+  { id: 'B.Sc. Electrical and Electronics Engineering with Education', category: 'Technical & Engineering' },
+  { id: 'B.Sc. Construction Technology and Management with Education', category: 'Technical & Engineering' },
+  { id: 'B.Sc. Wood Technology with Education', category: 'Technical & Engineering' },
+  { id: 'B.Sc. Welding and Fabrication Technology with Education', category: 'Technical & Engineering' },
+  { id: 'B.Sc. Renewable Energy Technology with Education', category: 'Technical & Engineering' },
+
+  // Business & Economics
+  { id: 'B.Sc. Accounting Education', category: 'Business & Economics' },
+  { id: 'B.Sc. Economics Education', category: 'Business & Economics' },
+  { id: 'B.Sc. Economics with Social Studies Education', category: 'Business & Economics' },
+  { id: 'B.Sc. Management Education', category: 'Business & Economics' },
+  { id: 'B.Sc. Entrepreneurship Education', category: 'Business & Economics' },
+
+  // Vocational, Arts & IT
+  { id: 'B.Sc. Catering and Hospitality Education', category: 'Vocational, Arts & IT' },
+  { id: 'B.Sc. Fashion Design and Textiles Education', category: 'Vocational, Arts & IT' },
+  { id: 'B.Sc. Mathematics Education', category: 'Vocational, Arts & IT' },
+  { id: 'B.Sc. Information Technology Education', category: 'Vocational, Arts & IT' },
+];
+
 export default function PreferencesTab({ initialData }: { initialData: any }) {
-  const [transportPreference, setTransportPreference] = useState(initialData?.transport_preference || '');
-  const [maxCommuteMinutes, setMaxCommuteMinutes] = useState(initialData?.max_commute_minutes || 45);
+  const [universityProgramme, setUniversityProgramme] = useState(initialData?.university_programme || '');
   
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -24,8 +47,7 @@ export default function PreferencesTab({ initialData }: { initialData: any }) {
     setSuccess(false);
     
     const result = await updateProfile({
-      transport_preference: transportPreference,
-      max_commute_minutes: parseInt(maxCommuteMinutes as any),
+      university_programme: universityProgramme,
     });
     
     setIsSaving(false);
@@ -41,7 +63,7 @@ export default function PreferencesTab({ initialData }: { initialData: any }) {
 
   return (
     <div>
-      <h2 className="heading-md mb-6">App & Travel Preferences</h2>
+      <h2 className="heading-md mb-6">App & Placement Preferences</h2>
       
       <div className="space-y-8 max-w-xl">
         
@@ -75,63 +97,33 @@ export default function PreferencesTab({ initialData }: { initialData: any }) {
 
         <hr className="border-hairline" />
 
-        {/* Transport Preferences */}
+        {/* University Programme */}
         <div>
-          <h3 className="heading-sm mb-4">Travel Details</h3>
+          <h3 className="heading-sm mb-4">University Programme</h3>
           
           <div className="space-y-6">
             <div>
-              <label className={labelClassName}>Primary Mode of Transport</label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: 'PUBLIC', label: 'Public Transport', desc: 'Trotro, Taxi, Uber' },
-                  { id: 'OWN', label: 'Private Vehicle', desc: 'Personal Car, Motorcycle' }
-                ].map((mode) => (
-                  <div 
-                    key={mode.id}
-                    onClick={() => setTransportPreference(mode.id)}
-                    className={`p-4 rounded-md cursor-pointer border transition-all ${
-                      transportPreference === mode.id 
-                        ? 'border-primary bg-primary-subdued/10 shadow-sm' 
-                        : 'border-hairline-input bg-canvas hover:border-ink-mute hover:bg-canvas-soft'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className={`font-semibold text-[14px] ${transportPreference === mode.id ? 'text-primary-deep' : 'text-ink'}`}>
-                        {mode.label}
-                      </span>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 ${
-                        transportPreference === mode.id ? 'border-primary' : 'border-ink-mute'
-                      }`}>
-                        {transportPreference === mode.id && <div className="w-2 h-2 bg-primary rounded-full" />}
-                      </div>
-                    </div>
-                    <p className="caption text-ink-mute">{mode.desc}</p>
-                  </div>
+              <label className={labelClassName}>Your Enrolled Programme</label>
+              <p className="text-[13px] text-ink-mute mb-4">
+                We use this to calculate highly accurate match scores for schools that offer subjects relevant to your teaching specialty.
+              </p>
+              
+              <select
+                value={universityProgramme}
+                onChange={(e) => setUniversityProgramme(e.target.value)}
+                className="w-full bg-canvas border border-hairline-input rounded-md px-4 py-2.5 text-[14px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              >
+                <option value="">Select your programme...</option>
+                {Array.from(new Set(PROGRAMMES.map(p => p.category))).map(category => (
+                  <optgroup key={category} label={category}>
+                    {PROGRAMMES.filter(p => p.category === category).map(prog => (
+                      <option key={prog.id} value={prog.id}>{prog.id}</option>
+                    ))}
+                  </optgroup>
                 ))}
-              </div>
+              </select>
             </div>
 
-            <div>
-              <div className="flex justify-between mb-1.5">
-                <label className="text-[13px] font-medium text-ink-secondary">Maximum Daily Commute</label>
-                <span className="text-[13px] font-semibold text-primary">{maxCommuteMinutes} mins</span>
-              </div>
-              <input
-                type="range"
-                min="15"
-                max="120"
-                step="15"
-                value={maxCommuteMinutes}
-                onChange={(e) => setMaxCommuteMinutes(Number(e.target.value))}
-                className="w-full accent-primary h-2 bg-canvas-soft rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between mt-2 caption text-ink-mute">
-                <span>15 min</span>
-                <span>2 hours+</span>
-              </div>
-            </div>
-            
             <div className="pt-2">
               <button
                 onClick={handleSave}

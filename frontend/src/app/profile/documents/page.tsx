@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, CheckCircle2, File, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, File, Loader2, ArrowRight, ArrowLeft, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
@@ -20,6 +20,8 @@ export default function DocumentsSetupPage() {
   const router = useRouter();
   const supabase = createClient();
   
+  const [showPrompt, setShowPrompt] = useState(true);
+  
   const [docs, setDocs] = useState<Record<DocumentType, UploadedDoc | null>>({
     cv: null,
     transcript: null,
@@ -36,7 +38,10 @@ export default function DocumentsSetupPage() {
           .eq('student_id', user.id)
           .single();
 
-        if (data) {
+        if (data && (data.cv_file_path || data.transcript_file_path || data.placement_letter_path)) {
+          // If they already have documents, hide the prompt
+          setShowPrompt(false);
+          
           setDocs(prev => {
             const newDocs = { ...prev };
             if (data.cv_file_path) {
@@ -66,7 +71,7 @@ export default function DocumentsSetupPage() {
   };
 
   const loadingMessages = [
-    'Documents uploaded securely',
+    'Finalizing profile details',
     'Analyzing your preferences',
     'Generating your unique profile',
     'Ready to go!'
@@ -90,7 +95,6 @@ export default function DocumentsSetupPage() {
         return;
       }
 
-      // Start simulated processing animation
       setDocs(prev => ({
         ...prev,
         [type]: {
@@ -101,7 +105,6 @@ export default function DocumentsSetupPage() {
         }
       }));
 
-      // Simulate a deliberate "scanning" delay to feel secure
       await new Promise(r => setTimeout(r, 1200));
 
       setDocs(prev => ({
@@ -124,10 +127,10 @@ export default function DocumentsSetupPage() {
   };
 
   const handleBack = () => {
-    router.push('/profile/transport');
+    router.push('/profile/programme');
   };
 
-  const handleComplete = async () => {
+  const handleComplete = async (skipped: boolean = false) => {
     setIsUploading(true);
     setLoadingStep(0);
 
@@ -141,28 +144,30 @@ export default function DocumentsSetupPage() {
     try {
       const paths: Record<string, string> = {};
       
-      for (const type of ['cv', 'transcript', 'placement'] as DocumentType[]) {
-        const doc = docs[type];
-        if (doc && !doc.isProcessing) {
-          if (doc.alreadyUploaded) {
-            // Do nothing, it's already in the DB and we don't want to overwrite the path
-            continue;
-          }
+      // If we are not skipping, we upload the files
+      if (!skipped) {
+        for (const type of ['cv', 'transcript', 'placement'] as DocumentType[]) {
+          const doc = docs[type];
+          if (doc && !doc.isProcessing) {
+            if (doc.alreadyUploaded) {
+              continue;
+            }
 
-          const file = doc.file;
-          const safeOriginalName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-          const fileName = `${user.id}/${type}_${Date.now()}_${safeOriginalName}`;
-          
-          const { data, error } = await supabase.storage
-            .from('documents')
-            .upload(fileName, file);
+            const file = doc.file;
+            const safeOriginalName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+            const fileName = `${user.id}/${type}_${Date.now()}_${safeOriginalName}`;
             
-          if (error) throw error;
-          if (data) {
-            if (type === 'placement') {
-              paths['placement_letter_path'] = data.path;
-            } else {
-              paths[`${type}_file_path`] = data.path;
+            const { data, error } = await supabase.storage
+              .from('documents')
+              .upload(fileName, file);
+              
+            if (error) throw error;
+            if (data) {
+              if (type === 'placement') {
+                paths['placement_letter_path'] = data.path;
+              } else {
+                paths[`${type}_file_path`] = data.path;
+              }
             }
           }
         }
@@ -172,7 +177,6 @@ export default function DocumentsSetupPage() {
       setLoadingStep(1);
 
       const { completeProfile } = await import('../actions');
-      // If paths is empty, this simply updates updated_at, which is fine
       const profileResult = await completeProfile(paths);
 
       if (profileResult.error) {
@@ -206,7 +210,7 @@ export default function DocumentsSetupPage() {
         await new Promise(r => setTimeout(r, 800));
         router.push('/profile/complete');
       } else {
-        alert('Failed to upload documents. Please try again. ' + (err.message || ''));
+        alert('Failed to complete profile. Please try again. ' + (err.message || ''));
         setIsUploading(false);
       }
     }
@@ -215,12 +219,12 @@ export default function DocumentsSetupPage() {
   const isValid = docs.cv !== null && !docs.cv.isProcessing && 
                   docs.transcript !== null && !docs.transcript.isProcessing;
 
-  const cardClassName = "w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-level-1 md:border md:border-hairline flex-1 flex flex-col";
+  const cardClassName = "w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-none border border-hairline md:border md:border-hairline flex-1 flex flex-col relative";
 
   if (isUploading) {
     return (
       <main className="flex-1 flex flex-col items-center justify-center p-6 bg-canvas-soft min-h-screen">
-        <div className={cardClassName + " space-y-6"}>
+        <div className={cardClassName + " max-w-md space-y-6"}>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -239,7 +243,7 @@ export default function DocumentsSetupPage() {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
-                    className="flex items-center gap-4 text-[14px] font-medium text-ink bg-canvas-soft p-4 rounded-md border border-hairline-input"
+                    className="flex items-center gap-4 text-[14px] font-medium text-ink bg-canvas-soft p-4 rounded-md -input"
                   >
                     {loadingStep > index ? (
                       <motion.div
@@ -274,13 +278,13 @@ export default function DocumentsSetupPage() {
         onClick={() => !doc && !isProcessing && fileInputRefs[type].current?.click()}
         className={`w-full p-4 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-center min-h-[90px] ${
           doc && !isProcessing
-            ? 'bg-canvas border border-hairline-input shadow-sm' 
+            ? 'bg-canvas -input shadow-sm' 
             : 'bg-primary-subdued/10 border border-dashed border-primary/30 hover:bg-primary-subdued/30 hover:border-primary/50 cursor-pointer'
         }`}
       >
         <div className="flex items-start justify-between w-full">
           <div className="flex items-start gap-3 w-full">
-            <div className={`p-2 rounded-sm shrink-0 transition-colors ${doc && !isProcessing ? 'bg-primary-subdued text-primary-deep' : 'bg-canvas border border-hairline-input text-primary'}`}>
+            <div className={`p-2 rounded-sm shrink-0 transition-colors ${doc && !isProcessing ? 'bg-primary-subdued text-primary-deep' : 'bg-canvas -input text-primary'}`}>
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
               ) : doc ? (
@@ -360,17 +364,66 @@ export default function DocumentsSetupPage() {
   };
 
   return (
-    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
+    <main className="flex-1 flex flex-col p-4 md:p-6 bg-canvas-soft min-h-screen items-center justify-center relative">
+      
+      {/* Modal Prompt Overlay */}
+      <AnimatePresence>
+        {showPrompt && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 10, opacity: 0 }}
+              transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
+              className="w-full max-w-md bg-canvas rounded-xl shadow-none border border-hairline  overflow-hidden"
+            >
+              <div className="p-6 md:p-8">
+                <div className="w-12 h-12 bg-primary-subdued/20 text-primary rounded-full flex items-center justify-center mb-5 border border-primary/10">
+                  <FileText className="w-6 h-6 stroke-[1.5]" />
+                </div>
+                
+                <h2 className="text-xl font-semibold tracking-tight text-ink mb-2">
+                  Optional Documents
+                </h2>
+                <p className="text-[14.5px] text-ink-mute leading-relaxed mb-8">
+                  Would you like to upload your CV, Transcripts, or Placement Letter now? You can easily skip this and complete it later from your dashboard.
+                </p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => setShowPrompt(false)}
+                    className="w-full button-primary-pill min-h-[48px] flex items-center justify-center font-medium"
+                  >
+                    Yes, I want to upload
+                  </button>
+                  <button
+                    onClick={() => handleComplete(true)}
+                    className="w-full button-secondary-pill min-h-[48px] flex items-center justify-center font-medium hover:bg-canvas-soft border-hairline"
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="w-full max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className={cardClassName}
+          className="w-full bg-canvas px-5 pb-5 pt-10 md:p-8 md:pt-12 rounded-xl shadow-none border border-hairline flex flex-col overflow-hidden relative"
         >
           <button 
             onClick={handleBack}
-            className="flex items-center gap-1 caption text-ink-mute hover:text-ink mb-6 transition-colors"
+            className="absolute top-4 left-5 md:top-6 md:left-8 text-[13px] font-medium text-ink-mute hover:text-ink transition-colors flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
@@ -416,16 +469,16 @@ export default function DocumentsSetupPage() {
             </div>
           </div>
 
-          <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
-            <div className="flex items-center justify-between mb-3 md:mb-0 md:absolute md:-top-7 md:w-full">
+          <div className="mt-8 pt-6 z-10">
+            <div className="flex items-center justify-between mb-3">
               <span className="caption text-ruby min-h-[20px] transition-opacity">
                 {!isValid ? "Please upload the required documents to continue." : ""}
               </span>
             </div>
             <button
-              onClick={handleComplete}
+              onClick={() => handleComplete(false)}
               disabled={!isValid}
-              className="w-full button-primary-pill min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white text-[16px] font-medium min-h-[48px] px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
               Complete Setup
               <ArrowRight className="w-4 h-4" />

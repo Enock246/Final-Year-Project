@@ -153,6 +153,6 @@
 }
 
 .text-input {
-  @apply bg-canvas text-ink text-[16px] font-normal leading-[1.4] px-4 py-4 rounded-[14px] border border-hairline-input focus:outline-none focus:border-primary transition-colors min-h-[58px];
+  @apply bg-canvas text-ink text-[16px] font-normal leading-[1.4] px-4 py-4 rounded-2xl border border-hairline-input focus:outline-none focus:border-primary transition-colors min-h-[58px];
   font-family: var(--font-urbanist);
 }

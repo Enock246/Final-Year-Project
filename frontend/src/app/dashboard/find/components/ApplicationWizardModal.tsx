@@ -468,7 +468,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                             type="text" 
                             value={editFullName}
                             onChange={(e) => setEditFullName(e.target.value)}
-                            className="w-full bg-[var(--canvas-soft)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+                            className="w-full bg-[var(--canvas-soft)] border border-[var(--hairline)] rounded-2xl px-4 py-2.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all min-h-[48px]"
                           />
                         </div>
                         <div>
@@ -477,14 +477,14 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                             type="text" 
                             value={studentProfile?.students?.email || ''}
                             readOnly
-                            className="w-full bg-[var(--canvas)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-[15px] text-[var(--ink-mute)] opacity-70 cursor-not-allowed"
+                            className="w-full bg-[var(--canvas)] border border-[var(--hairline)] rounded-2xl px-4 py-2.5 text-[15px] text-[var(--ink-mute)] opacity-70 cursor-not-allowed min-h-[48px]"
                           />
                         </div>
                         <div className="flex items-center gap-3 pt-2">
                           <button 
                             onClick={handleSaveProfile}
                             disabled={savingProfile || !editFullName.trim()}
-                            className="px-6 py-2 bg-[var(--primary)] text-white text-[14px] font-medium rounded-lg flex items-center gap-2 hover:bg-[var(--primary-deep)] disabled:opacity-50 transition-colors"
+                            className="px-6 min-h-[44px] bg-[var(--primary)] text-white text-[14px] font-medium rounded-full flex items-center gap-2 hover:bg-[var(--primary-deep)] disabled:opacity-50 transition-colors"
                           >
                             {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                           </button>
@@ -810,7 +810,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
           <div className="p-6 border-t border-[var(--hairline)] bg-white shrink-0 flex justify-end gap-3">
             <button 
               onClick={onClose}
-              className="pressable px-6 py-2.5 rounded-xl font-medium text-[var(--ink-mute)] hover:bg-[var(--canvas-soft)] transition-colors"
+              className="pressable px-6 py-2.5 rounded-full font-medium text-[var(--ink-mute)] hover:bg-[var(--canvas-soft)] transition-colors"
             >
               Cancel
             </button>
@@ -819,7 +819,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
               <button 
                 onClick={startAIGeneration}
                 disabled={loadingProfile}
-                className="pressable px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
+                className="pressable px-6 py-2.5 rounded-full bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
               >
                 {hasLocalDraft ? 'Continue Saved Draft' : 'Generate Letter'} <ChevronRight className="w-4 h-4" />
               </button>
@@ -829,13 +829,13 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
               <>
                 <button 
                   onClick={handlePrint}
-                  className="pressable px-6 py-2.5 rounded-xl bg-white border border-[var(--hairline)] text-[var(--ink)] font-semibold flex items-center gap-2 hover:bg-[var(--canvas-soft)] transition-colors shadow-sm"
+                  className="pressable px-6 py-2.5 rounded-full bg-white border border-[var(--hairline)] text-[var(--ink)] font-semibold flex items-center gap-2 hover:bg-[var(--canvas-soft)] transition-colors shadow-sm"
                 >
                   <Printer className="w-4 h-4" /> Print Letter
                 </button>
                 <button 
                   onClick={() => setStep(3)}
-                  className="pressable px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors"
+                  className="pressable px-6 py-2.5 rounded-full bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors"
                 >
                   Continue <ChevronRight className="w-4 h-4" />
                 </button>
@@ -846,7 +846,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
               <button 
                 onClick={sendApplication}
                 disabled={sending}
-                className="pressable px-8 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
+                className="pressable px-8 py-2.5 rounded-full bg-[var(--primary)] text-white font-semibold flex items-center gap-2 hover:bg-[var(--primary-deep)] transition-colors disabled:opacity-50"
               >
                 {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
                 {sending ? 'Sending...' : 'Send Application'}

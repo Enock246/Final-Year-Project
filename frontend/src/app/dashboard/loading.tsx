@@ -10,21 +10,21 @@ export default function DashboardLoading() {
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div 
             key={i}
-            className="bg-[var(--canvas-soft)] p-6 rounded-[8px] border border-[var(--hairline)] flex flex-col h-[280px]"
+            className="bg-[var(--canvas)] p-6 rounded-2xl border border-[var(--hairline)] flex flex-col h-[280px]"
           >
             <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-muted/50 rounded-md"></div>
+              <div className="w-12 h-12 bg-muted/50 rounded-2xl"></div>
               <div className="w-24 h-8 bg-muted/50 rounded-full"></div>
             </div>
             
-            <div className="h-6 w-3/4 bg-muted/50 rounded-xl mb-6"></div>
+            <div className="h-6 w-3/4 bg-muted/50 rounded-full mb-6"></div>
             
             <div className="space-y-3 mb-6 flex-1">
-              <div className="h-4 w-1/2 bg-muted/50 rounded-lg"></div>
-              <div className="h-4 w-2/3 bg-muted/50 rounded-lg"></div>
+              <div className="h-4 w-1/2 bg-muted/50 rounded-full"></div>
+              <div className="h-4 w-2/3 bg-muted/50 rounded-full"></div>
             </div>
 
-            <div className="w-full h-12 bg-muted/50 rounded-xl mt-auto"></div>
+            <div className="w-full h-12 bg-muted/50 rounded-full mt-auto"></div>
           </div>
         ))}
       </div>

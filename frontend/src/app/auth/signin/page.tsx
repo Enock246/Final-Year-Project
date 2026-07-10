@@ -67,24 +67,24 @@ export default function SigninPage() {
   };
 
   const getInputClassName = (hasError: boolean, hasIconRight: boolean = false) => {
-    const base = "w-full min-h-[48px] px-3 rounded-sm border bg-canvas text-[16px] md:text-[15px] text-ink focus:outline-none transition-shadow duration-200";
+    const base = "w-full min-h-[48px] px-4 rounded-2xl border bg-canvas text-[16px] md:text-[15px] text-ink focus:outline-none transition-all duration-200";
     const paddingRight = hasIconRight ? "pr-10" : "";
     if (hasError) {
-      return `${base} ${paddingRight} border-ruby focus:border-ruby focus:ring-[3px] focus:ring-ruby/20`;
+      return `${base} ${paddingRight} border-ruby focus:border-ruby focus:ring-[3px] focus:ring-ruby/10`;
     }
-    return `${base} ${paddingRight} border-input focus:border-primary focus:ring-[3px] focus:ring-primary/20`;
+    return `${base} ${paddingRight} border-black/10 focus:border-primary-press focus:ring-[3px] focus:ring-primary-press/10`;
   };
 
   const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
 
   return (
-    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
+    <main className="flex-1 flex flex-col p-4 md:p-6 bg-canvas-soft min-h-screen items-center justify-center">
+      <div className="w-full max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className="w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-[rgba(0,55,112,0.08)_0_1px_3px] md:border md:border-hairline flex-1 flex flex-col"
+          className="w-full bg-canvas p-6 md:p-8 rounded-xl shadow-none border border-hairline flex flex-col overflow-hidden"
         >
           <h1 className="heading-lg text-ink mb-1">Welcome back</h1>
           <p className="body-md text-ink-mute mb-8">Sign in to track your internship placements.</p>
@@ -120,7 +120,12 @@ export default function SigninPage() {
             </div>
 
             <div>
-              <label className={labelClassName}>Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[13px] font-medium text-ink-secondary">Password</label>
+                <Link href="/auth/forgot-password" className="text-[13px] font-medium text-primary hover:text-primary-press transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   {...register('password')}
@@ -172,7 +177,7 @@ export default function SigninPage() {
               )}
             </AnimatePresence>
 
-            <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
+            <div className="mt-auto pt-6 z-10">
               <button
                 type="submit"
                 disabled={isSubmitting || !isValid || !watch('password') || (isCaptchaRequired && !captchaToken)}

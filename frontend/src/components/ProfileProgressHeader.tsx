@@ -9,7 +9,7 @@ export default function ProfileProgressHeader() {
   // Determine progress percentage based on route
   let progress = 0;
   if (pathname.includes('/profile/location')) progress = 33;
-  else if (pathname.includes('/profile/transport')) progress = 66;
+  else if (pathname.includes('/profile/programme')) progress = 66;
   else if (pathname.includes('/profile/documents')) progress = 90;
   else if (pathname.includes('/profile/complete')) progress = 100;
 

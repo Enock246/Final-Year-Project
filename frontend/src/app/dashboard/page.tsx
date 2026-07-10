@@ -62,7 +62,7 @@ const formatMatchScore = (score: number) => {
 };
 
 function DashboardContent() {
-  const [nearbySchools, setNearbySchools] = useState<any[]>(mockSchools.slice(0, 4));
+  const [nearbySchools, setNearbySchools] = useState<any[]>([]);
   const [isLoadingSchools, setIsLoadingSchools] = useState(true);
   const [totalSchools, setTotalSchools] = useState<number>(0);
   
@@ -133,8 +133,8 @@ function DashboardContent() {
     setOpenDropdownId(null);
   };
 
-  // Unblur content if the user has applied to 3 or more schools (using total applications)
-  const hasMetMinimum = totalApplications >= 3;
+  // The user requested to never blur these sections.
+  const hasMetMinimum = true;
 
   useEffect(() => {
     async function fetchData() {
@@ -275,7 +275,7 @@ function DashboardContent() {
 
       {/* Stats Cards (Mobile Horizontal Snap Carousel) */}
       <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-none border border-[var(--hairline)] hover:shadow-none transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <span className="body-md font-medium text-[var(--ink-secondary)]">Applications</span>
             <div className="w-10 h-10 rounded-full bg-[var(--canvas-soft)] flex items-center justify-center border border-[var(--hairline)] shrink-0">
@@ -285,7 +285,7 @@ function DashboardContent() {
           <span className="display-lg text-[var(--ink)]">{totalApplications}</span>
         </div>
 
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-none border border-[var(--hairline)] hover:shadow-none transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <span className="body-md font-medium text-[var(--ink-secondary)]">Responses</span>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center border shrink-0 ${totalResponses > 0 ? 'bg-success/10 border-success/20' : 'bg-[var(--canvas-soft)] border-[var(--hairline)]'}`}>
@@ -295,7 +295,7 @@ function DashboardContent() {
           <span className="display-lg text-[var(--ink)]">{totalResponses}</span>
         </div>
 
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-none border border-[var(--hairline)] hover:shadow-none transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <span className="body-md font-medium text-[var(--ink-secondary)]">Available</span>
             <div className="w-10 h-10 rounded-full bg-[var(--primary-subdued)]/30 flex items-center justify-center border border-[var(--primary-subdued)]/50 shrink-0">
@@ -305,7 +305,7 @@ function DashboardContent() {
           <span className="display-lg text-[var(--ink)]">{totalSchools || 0}</span>
         </div>
 
-        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-level-1 border border-[var(--hairline)] hover:shadow-level-2 transition-shadow flex flex-col justify-between">
+        <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl p-6 shadow-none border border-[var(--hairline)] hover:shadow-none transition-shadow flex flex-col justify-between">
           <span className="body-md font-medium text-[var(--ink-secondary)] mb-4">Profile Status</span>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-3 h-3 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--success)] shrink-0" />
@@ -321,8 +321,22 @@ function DashboardContent() {
       <div className="mb-8">
         <h2 className="heading-md text-[var(--ink)] mb-4">Top Recommendations</h2>
         <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {nearbySchools.slice(0, 3).map((school, idx) => (
-            <div key={idx} className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] p-5 flex flex-col justify-between">
+          {isLoadingSchools ? (
+            [1, 2, 3].map((i) => (
+              <div key={`skel-${i}`} className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl shadow-none border border-[var(--hairline)] p-5 flex flex-col justify-between h-[180px] animate-pulse">
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="h-6 w-16 bg-muted/30 rounded-md"></div>
+                  </div>
+                  <div className="h-5 w-3/4 bg-muted/30 rounded-md mb-4"></div>
+                  <div className="h-4 w-1/2 bg-muted/30 rounded-md"></div>
+                </div>
+                <div className="w-full h-10 bg-muted/30 rounded-full mt-4"></div>
+              </div>
+            ))
+          ) : (
+            nearbySchools.slice(0, 3).map((school, idx) => (
+              <div key={idx} className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas)] rounded-2xl shadow-none border border-[var(--hairline)] p-5 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-start mb-3">
                   <span className="micro-cap bg-[var(--canvas-soft)] text-[var(--ink)] border border-[var(--hairline)] px-2 py-1 rounded-md shrink-0 font-medium">
@@ -341,8 +355,9 @@ function DashboardContent() {
               >
                 Apply
               </Link>
-            </div>
-          ))}
+              </div>
+            ))
+          )}
           
           {/* Search for More Card */}
           <div className="w-[85%] min-w-[260px] max-w-[320px] shrink-0 sm:w-auto sm:min-w-0 snap-center bg-[var(--canvas-soft)] rounded-2xl border border-[var(--hairline)] border-dashed p-5 flex flex-col items-center justify-center text-center hover:bg-[var(--canvas-soft-2)] transition-colors">
@@ -362,7 +377,7 @@ function DashboardContent() {
       </div>
 
       {/* Row 2: Application Pipeline (Table on Desktop, Cards on Mobile) */}
-      <div className="mb-8 bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] overflow-visible">
+      <div className="mb-8 bg-[var(--canvas)] rounded-2xl shadow-none border border-[var(--hairline)] overflow-visible">
         <div className="p-4 sm:p-6 border-b border-[var(--hairline)] flex items-center justify-between">
           <h2 className="heading-md text-[var(--ink)]">Active Applications</h2>
           <Link href="/dashboard/applications" className="button-sm text-[var(--primary)] hover:text-[var(--primary-deep)] shrink-0 ml-4">View all</Link>
@@ -411,7 +426,7 @@ function DashboardContent() {
                         <MoreVertical className="w-5 h-5 text-[var(--ink-mute)] group-hover:text-[var(--ink)] transition-colors" />
                       </button>
                       {openDropdownId === (app.application_id || app.id) && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border border-[var(--hairline)] rounded-xl shadow-level-2 z-[60] py-1 overflow-hidden">
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-[var(--hairline)] rounded-xl shadow-none z-[60] py-1 overflow-hidden">
                           <button 
                             onPointerDown={(e) => { e.stopPropagation(); setSelectedApp(app); setIsDrawerOpen(true); setOpenDropdownId(null); }}
                             className="w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 hover:bg-[var(--canvas-soft)] text-[var(--ink)] font-medium transition-colors"
@@ -448,7 +463,7 @@ function DashboardContent() {
                         ))}
                       </div>
                       <Link href="/dashboard/find" className="absolute inset-0 flex items-center justify-center z-10 p-4 group cursor-pointer">
-                        <div className="bg-[var(--canvas)]/80 backdrop-blur-md px-6 py-3 rounded-full shadow-level-1 border border-[var(--primary)]/30 flex items-center gap-3 group-hover:scale-105 group-hover:shadow-level-2 group-hover:border-[var(--primary)] transition-all duration-300">
+                        <div className="bg-[var(--canvas)]/80 backdrop-blur-md px-6 py-3 rounded-full shadow-none border border-[var(--primary)]/30 flex items-center gap-3 group-hover:scale-105 group-hover:shadow-none group-hover:border-[var(--primary)] transition-all duration-300">
                           <AlertCircle className="w-5 h-5 text-[var(--primary)]" />
                           <p className="body-md font-medium text-[var(--ink)]">
                             We recommend that you begin application for at least <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> schools
@@ -477,7 +492,7 @@ function DashboardContent() {
                     <MoreVertical className="w-5 h-5 text-[var(--ink-mute)]" />
                   </button>
                   {openDropdownId === (app.application_id || app.id) && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-[var(--hairline)] rounded-xl shadow-level-2 z-[60] py-1 overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-[var(--hairline)] rounded-xl shadow-none z-[60] py-1 overflow-hidden">
                       <button 
                         onPointerDown={(e) => { e.stopPropagation(); setSelectedApp(app); setIsDrawerOpen(true); setOpenDropdownId(null); }}
                         className="w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 hover:bg-[var(--canvas-soft)] text-[var(--ink)] font-medium transition-colors"
@@ -535,7 +550,7 @@ function DashboardContent() {
                 ))}
               </div>
               <Link href="/dashboard/find" className="absolute inset-0 flex items-center justify-center z-10 p-4 group cursor-pointer">
-                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 group-hover:scale-105 group-hover:shadow-level-2 group-hover:border-[var(--primary)] transition-all duration-300">
+                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-none border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 group-hover:scale-105 group-hover:shadow-none group-hover:border-[var(--primary)] transition-all duration-300">
                   <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                   <p className="body-md font-medium text-[var(--ink)]">
                     We recommend that you begin application for at least <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> schools
@@ -554,7 +569,7 @@ function DashboardContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           
           {/* Left Col (2/3): Document Readiness Matrix */}
-          <div className="lg:col-span-2 bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] overflow-hidden relative">
+          <div className="lg:col-span-2 bg-[var(--canvas)] rounded-2xl shadow-none border border-[var(--hairline)] overflow-hidden relative">
             <div className={`transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
               <div className="p-4 sm:p-6 border-b border-[var(--hairline)]">
                 <h2 className="heading-md text-[var(--ink)]">Document Readiness</h2>
@@ -588,7 +603,7 @@ function DashboardContent() {
             {/* Section Overlay */}
             {!hasMetMinimum && (
               <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
+                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-none border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
                   <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                   <p className="body-md font-medium text-[var(--ink)]">
                     Unlock <span className="font-bold text-[var(--ink)]">Readiness</span> by applying to <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> more school{remainingSlots > 1 ? 's' : ''}.
@@ -599,7 +614,7 @@ function DashboardContent() {
           </div>
 
           {/* Right Col (1/3): Communication Inbox */}
-          <div className="bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] flex flex-col relative overflow-hidden">
+          <div className="bg-[var(--canvas)] rounded-2xl shadow-none border border-[var(--hairline)] flex flex-col relative overflow-hidden">
             <div className={`flex flex-col h-full transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
               <div className="p-4 sm:p-6 border-b border-[var(--hairline)] flex items-center justify-between">
                 <h2 className="heading-md text-[var(--ink)]">Inbox</h2>
@@ -674,7 +689,7 @@ function DashboardContent() {
             {/* Section Overlay */}
             {!hasMetMinimum && (
               <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
+                <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-none border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
                   <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                   <p className="body-md font-medium text-[var(--ink)]">
                     Unlock <span className="font-bold text-[var(--ink)]">Inbox</span> by applying to <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> more school{remainingSlots > 1 ? 's' : ''}.
@@ -687,7 +702,7 @@ function DashboardContent() {
         </div>
 
         {/* Row 4: Placement Analytics */}
-        <div className="bg-[var(--canvas)] rounded-2xl shadow-level-1 border border-[var(--hairline)] relative overflow-hidden">
+        <div className="bg-[var(--canvas)] rounded-2xl shadow-none border border-[var(--hairline)] relative overflow-hidden">
           <div className={`p-5 sm:p-8 transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
             <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
@@ -773,7 +788,7 @@ function DashboardContent() {
           {/* Section Overlay */}
           {!hasMetMinimum && (
             <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-              <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-level-1 border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
+              <div className="bg-[var(--canvas)]/85 backdrop-blur-md px-5 py-4 rounded-2xl shadow-none border border-[var(--primary)]/30 flex flex-col text-center items-center gap-2 max-w-[280px]">
                 <AlertCircle className="w-6 h-6 text-[var(--primary)]" />
                 <p className="body-md font-medium text-[var(--ink)]">
                   Unlock <span className="font-bold text-[var(--ink)]">Analytics</span> by applying to <span className="font-bold text-[var(--primary)]">{remainingSlots}</span> more school{remainingSlots > 1 ? 's' : ''}.

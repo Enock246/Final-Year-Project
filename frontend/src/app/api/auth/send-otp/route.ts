@@ -71,7 +71,9 @@ export async function POST(request: Request) {
     // 6. Send email using Nodemailer (Gmail App Password)
     if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_APP_PASSWORD,
@@ -95,7 +97,7 @@ export async function POST(request: Request) {
           `,
         });
       } catch (emailError) {
-        console.error('Nodemailer sending error (Redacted details for security)');
+        console.error('Nodemailer sending error:', emailError);
         return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
       }
     } else {

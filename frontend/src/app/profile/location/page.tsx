@@ -151,43 +151,43 @@ export default function LocationSetupPage() {
     if (result.error) {
       alert(result.error);
     } else {
-      router.push('/profile/transport');
+      router.push('/profile/programme');
     }
   };
 
   const isValid = selectedRegion && selectedDistrict && townCity.length > 2;
 
   // Stripe Classes
-  const inputClassName = "text-input w-full min-h-[48px]";
+  const inputClassName = "w-full min-h-[48px] px-4 rounded-2xl border bg-canvas text-[16px] md:text-[15px] text-ink focus:outline-none focus:border-primary-press focus:ring-[3px] focus:ring-primary-press/10 transition-all duration-200 border-black/10";
   const labelClassName = "text-[13px] font-medium text-ink-secondary mb-1.5 block";
 
   return (
-    <main className="flex-1 flex flex-col p-0 md:p-6 bg-canvas md:bg-canvas-soft min-h-screen">
-      <div className="w-full max-w-md mx-auto md:mt-8 flex-1 flex flex-col">
+    <main className="flex-1 flex flex-col p-4 md:p-6 bg-canvas-soft min-h-screen items-center justify-center">
+      <div className="w-full max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-          className="w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-level-1 md:border md:border-hairline flex-1 flex flex-col"
+          className="w-full bg-canvas px-5 pb-5 pt-10 md:p-8 md:pt-12 rounded-xl shadow-none border border-hairline flex flex-col overflow-hidden relative"
         >
-          <div className="flex justify-between items-start mb-2">
+          <button 
+            onClick={async () => {
+              const supabase = (await import('@/utils/supabase/client')).createClient();
+              await supabase.auth.signOut();
+              router.push('/');
+            }}
+            className="absolute top-4 right-5 md:top-6 md:right-8 text-[13px] font-medium text-ink-mute hover:text-ink transition-colors"
+          >
+            Sign out
+          </button>
+          
+          <div className="flex justify-between items-start mb-2 mt-4 md:mt-0">
             <div>
               <h1 className="heading-lg text-ink mb-1">Where do you live?</h1>
             </div>
-            
-            <button 
-              onClick={async () => {
-                const supabase = (await import('@/utils/supabase/client')).createClient();
-                await supabase.auth.signOut();
-                router.push('/');
-              }}
-              className="caption text-ink-mute hover:text-ink transition-colors"
-            >
-              Sign Out
-            </button>
           </div>
           <p className="body-md text-ink-mute mb-8 text-balance">
-            We'll use this to find nearby schools and calculate the best transportation routes.
+            We'll use this to find nearby schools and calculate the distance.
           </p>
 
           <div className="space-y-5">
@@ -252,12 +252,12 @@ export default function LocationSetupPage() {
               <button
                 onClick={handleDetectLocation}
                 disabled={isDetecting || !!locationDetected}
-                className={`w-full min-h-[48px] md:h-10 rounded-sm font-medium text-[16px] md:text-[13px] transition-all flex items-center justify-center gap-2 ${
+                className={`w-full min-h-[48px] md:h-12 rounded-2xl font-medium text-[16px] md:text-[15px] transition-all flex items-center justify-center gap-2 ${
                   locationDetected 
                     ? 'bg-primary-subdued text-primary-deep cursor-default border border-transparent'
                     : isDetecting 
                       ? 'bg-canvas-soft text-ink-mute border border-hairline-input cursor-wait' 
-                      : 'bg-white hover:bg-canvas-soft text-ink border border-hairline-input shadow-sm'
+                      : 'bg-white hover:bg-canvas-soft text-ink border border-black/10 focus:border-primary-press focus:ring-[3px] focus:ring-primary-press/10 shadow-sm'
                 }`}
               >
                 {locationDetected ? (
@@ -303,8 +303,8 @@ export default function LocationSetupPage() {
             </AnimatePresence>
           </div>
 
-          <div className="mt-auto pt-8 md:pt-6 sticky bottom-0 left-0 right-0 bg-canvas md:relative p-4 md:p-0 border-t border-hairline md:border-t-0 z-10 -mx-6 md:mx-0">
-            <div className="flex items-center justify-between mb-3 md:mb-0 md:absolute md:-top-7 md:w-full">
+          <div className="mt-auto pt-6 z-10">
+            <div className="flex items-center justify-between mb-3">
               <span className="caption text-ruby min-h-[20px] transition-opacity">
                 {!isValid ? "Please complete all required fields." : ""}
               </span>
@@ -312,7 +312,7 @@ export default function LocationSetupPage() {
             <button
               onClick={handleNext}
               disabled={!isValid || isSaving}
-              className="w-full button-primary-pill min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white text-[16px] font-medium min-h-[48px] px-4 rounded-pill hover:bg-primary-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
