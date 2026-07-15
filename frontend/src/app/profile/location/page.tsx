@@ -74,9 +74,13 @@ export default function LocationSetupPage() {
         (error) => {
           console.error('Error getting location:', error);
           setIsDetecting(false);
-          alert('Location access denied or unavailable. Please select manually.');
+          if (error.code === error.TIMEOUT) {
+            alert('Location request timed out. Your connection might be too slow. Please select manually.');
+          } else {
+            alert('Location access denied or unavailable. Please select manually.');
+          }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: false, timeout: 30000, maximumAge: 0 }
       );
     } else {
       setIsDetecting(false);
