@@ -6,9 +6,9 @@ import { createClient } from '@/utils/supabase/server';
 const sendRequestSchema = z.object({
   student_id: z.string().uuid(),
   school_id: z.string().uuid(),
-  student_email: z.string().email(),
+  student_email: z.string(),
   student_name: z.string(),
-  school_email: z.string().email().or(z.literal('')).optional().nullable(),
+  school_email: z.string().optional().nullable(),
   school_name: z.string(),
   letter_content: z.string(),
   documents: z.array(z.object({
@@ -28,7 +28,15 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const parsed = sendRequestSchema.parse(body);
+    console.log('[DEBUG] Incoming body:', body);
+    
+    let parsed;
+    try {
+      parsed = sendRequestSchema.parse(body);
+    } catch (zError) {
+      console.error('[DEBUG] Zod Error:', JSON.stringify(zError, null, 2));
+      throw zError;
+    }
 
     // Verify the user is sending their own application
     if (parsed.student_id !== user.id) {
@@ -193,7 +201,8 @@ export async function POST(req: Request) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request data', details: (error as any).errors }, { status: 400 });
+      console.error('[DEBUG] Zod Validation Failed:', error.issues);
+      return NextResponse.json({ error: 'Invalid request data', details: error.issues }, { status: 400 });
     }
     console.error('Error sending application:', error);
     return NextResponse.json({ error: 'Failed to send application' }, { status: 500 });

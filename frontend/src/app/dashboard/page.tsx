@@ -9,6 +9,7 @@ import { FileText, CheckCircle2, ChevronRight, School, MoreVertical, MessageSqua
 import ApplicationDetailsDrawer from './components/ApplicationDetailsDrawer';
 import InboxMessageDrawer from './components/InboxMessageDrawer';
 import AllMessagesDrawer from './components/AllMessagesDrawer';
+import { updateApplicationStatus } from './actions';
 
 export const parseMessageContent = (msg: any) => {
   if (!msg || !msg.subject) return { heading: 'System', body: msg?.content || '', initials: 'S', rawSchoolName: 'System', cliffhanger: '' };
@@ -131,6 +132,21 @@ function DashboardContent() {
     setTotalApplications(prev => Math.max(0, prev - 1));
     setRemainingSlots(prev => Math.min(3, prev + 1));
     setOpenDropdownId(null);
+  };
+
+  const handleStatusChange = async (appId: string, newStatus: string) => {
+    // Optimistically update UI
+    setActiveApps(prev => prev.map(app => 
+      (app.application_id || app.id) === appId 
+        ? { ...app, stage: newStatus } 
+        : app
+    ));
+
+    try {
+      await updateApplicationStatus(appId, newStatus);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
   };
 
   // The user requested to never blur these sections.

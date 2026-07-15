@@ -7,17 +7,26 @@ import { createClient } from '@/utils/supabase/client';
 
 export default function InboxMessageDrawer({ message, onClose, isOpen }: { message: any, onClose: () => void, isOpen: boolean }) {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [appStatus, setAppStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      if (message?.application_id) {
+        const fetchStatus = async () => {
+          const supabase = createClient();
+          const { data } = await supabase.from('applications').select('status').eq('id', message.application_id).single();
+          if (data) setAppStatus(data.status);
+        };
+        fetchStatus();
+      }
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, message]);
 
   if (!message) return null;
 

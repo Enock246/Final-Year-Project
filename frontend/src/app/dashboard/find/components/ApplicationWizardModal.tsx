@@ -316,7 +316,8 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
       
       const resData = await res.json();
       if (!res.ok) {
-        throw new Error(resData.error || 'Failed to send application');
+        console.error('Validation details:', resData.details);
+        throw new Error(resData.error + (resData.details ? ': ' + JSON.stringify(resData.details) : ''));
       }
       
       setSendChecklist(prev => {

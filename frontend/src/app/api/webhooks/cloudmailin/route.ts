@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req: Request) {
   try {
@@ -75,10 +76,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to record message' }, { status: 500 });
     }
 
-    // Update the application status to REPLIED
+    // Use Gemini to classify the reply
+    let determinedStatus = 'REPLIED';
+    try {
+      if (process.env.GEMINI_API_KEY) {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const prompt = `You are analyzing an email reply from a school headmaster to a university student requesting an internship/teaching placement.
+Read the email below and classify it into EXACTLY ONE of the following three words:
+- ACCEPTED (if they are accepting the student, telling them to report, or confirming the placement)
+- REJECTED (if they are declining, saying there is no space, or saying they cannot accommodate the student)
+- REPLIED (if they are just asking a follow-up question, saying they are reviewing it, or anything else that is not a final decision)
+
+Reply with ONLY the single word (ACCEPTED, REJECTED, or REPLIED). Do not output any other text.
+
+Email:
+"${cleanContent}"`;
+
+        const aiResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        });
+
+        const result = aiResponse.text?.trim().toUpperCase() || '';
+        if (['ACCEPTED', 'REJECTED', 'REPLIED'].includes(result)) {
+          determinedStatus = result;
+          console.log(`[Cloudmailin] AI determined status: ${determinedStatus}`);
+        } else {
+          console.warn(`[Cloudmailin] AI returned invalid status: ${result}. Defaulting to REPLIED.`);
+        }
+      } else {
+        console.warn(`[Cloudmailin] No GEMINI_API_KEY. Defaulting status to REPLIED.`);
+      }
+    } catch (aiError) {
+      console.error('[Cloudmailin] AI classification failed:', aiError);
+      // Default to REPLIED if AI fails
+    }
+
+    // Update the application status
     await supabase
       .from('applications')
-      .update({ status: 'REPLIED' })
+      .update({ status: determinedStatus })
       .eq('id', applicationId);
 
     console.log(`[Cloudmailin] Successfully processed reply for application: ${applicationId}`);

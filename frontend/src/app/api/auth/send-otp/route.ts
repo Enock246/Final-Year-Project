@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     });
 
     if (rateLimitError) {
-      console.error('Rate limit checking error (Redacted details for security)');
+      console.error('Rate limit checking error DETAILS:', rateLimitError);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       .insert({ email, otp });
 
     if (dbError) {
-      console.error('Database error storing OTP (Redacted details for security)');
+      console.error('Database error storing OTP DETAILS:', dbError);
       return NextResponse.json({ error: 'Failed to generate code' }, { status: 500 });
     }
 
