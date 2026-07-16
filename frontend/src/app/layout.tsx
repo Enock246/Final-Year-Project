@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: "InternConnect",
+  title: "InternAid",
   description: "Find Your Perfect Teaching Placement Fast",
 };
 

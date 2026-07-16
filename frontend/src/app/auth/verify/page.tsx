@@ -128,7 +128,7 @@ function VerifyContent() {
       </div>
       <h1 className="heading-lg text-ink mb-2">Security Check</h1>
       <p className="text-ink-mute max-w-sm mb-10 body-md">
-        Are you currently trying to create an account or sign in to InternConnect?
+        Are you currently trying to create an account or sign in to InternAid?
       </p>
 
       <div className="flex flex-col w-full max-w-sm gap-3">

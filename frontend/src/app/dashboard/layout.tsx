@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             IC
           </div>
           <span className="text-[15px] font-semibold text-ink">
-            InternConnect
+            InternAid
           </span>
         </div>
         <button 
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             {(!isCollapsed || mobileMenuOpen) && (
               <span className="text-[15px] font-semibold text-ink tracking-tight animate-in fade-in">
-                InternConnect
+                InternAid
               </span>
             )}
           </div>

@@ -155,14 +155,14 @@ export async function sendPasswordResetEmail(formData: FormData) {
 
     try {
       await transporter.sendMail({
-        from: `"InternConnect" <${process.env.GMAIL_USER}>`,
+        from: `"InternAid" <${process.env.GMAIL_USER}>`,
         to: email,
         subject: 'Your Password Reset Code',
         html: `
           <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; color: #333;">
             <h2>Password Reset Request</h2>
             <p>Hi ${firstName},</p>
-            <p>We received a request to reset your password for your InternConnect account. Please use the following 6-digit code to choose a new password:</p>
+            <p>We received a request to reset your password for your InternAid account. Please use the following 6-digit code to choose a new password:</p>
             <div style="letter-spacing: 0.25em; padding: 24px; background-color: #f4f4f5; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; margin: 32px 0;">
               ${otp}
             </div>

@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     const res = await fetch(nominatimUrl, {
       headers: {
         'Accept-Language': 'en',
-        'User-Agent': 'InternConnect-App/1.0', // Required by Nominatim policy
+        'User-Agent': 'InternAid-App/1.0', // Required by Nominatim policy
       },
     });
 

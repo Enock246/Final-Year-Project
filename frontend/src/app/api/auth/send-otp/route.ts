@@ -82,13 +82,13 @@ export async function POST(request: Request) {
 
       try {
         await transporter.sendMail({
-          from: `"InternConnect" <${process.env.GMAIL_USER}>`,
+          from: `"InternAid" <${process.env.GMAIL_USER}>`,
           to: email,
-          subject: 'Your InternConnect Verification Code',
+          subject: 'Your InternAid Verification Code',
           html: `
             <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto;">
               <h2>Confirm your email address</h2>
-              <p>Welcome to InternConnect! Please use the following 6-digit code to verify your email address and finish signing up:</p>
+              <p>Welcome to InternAid! Please use the following 6-digit code to verify your email address and finish signing up:</p>
               <div style="letter-spacing: 0.25em; padding: 24px; background-color: #f4f4f5; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; margin: 32px 0;">
                 ${otp}
               </div>

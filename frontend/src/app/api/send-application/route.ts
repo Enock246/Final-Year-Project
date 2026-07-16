@@ -145,7 +145,7 @@ export async function POST(req: Request) {
 
     // 1. Send the actual application to the school
     const schoolMailOptions = {
-      from: `"${parsed.student_name} (via InternConnect)" <${process.env.GMAIL_USER}>`,
+      from: `"${parsed.student_name} (via InternAid)" <${process.env.GMAIL_USER}>`,
       to: "yeboahenock213@gmail.com", // HARDCODED FOR TESTING
       replyTo: `"${parsed.student_name}" <${process.env.CLOUDMAILIN_ADDRESS}>`,
       subject: `New Internship Application from ${parsed.student_name}`,
@@ -176,7 +176,7 @@ export async function POST(req: Request) {
           <h2 style="color: #1a1a1a;">Application Successfully Sent</h2>
           <p>Hi ${parsed.student_name},</p>
           <p>Your application to <strong>${parsed.school_name}</strong> has been successfully delivered to their administrative inbox.</p>
-          <p>You can track the status of your application and you will receive any updates directly in your InternConnect dashboard.</p>
+          <p>You can track the status of your application and you will receive any updates directly in your InternAid dashboard.</p>
           <hr style="border: 1px solid #eaeaea; margin: 20px 0;" />
           <p style="margin-bottom: 5px;"><strong>Documents Included in your application:</strong></p>
           <ul style="margin-top: 0; padding-left: 20px;">

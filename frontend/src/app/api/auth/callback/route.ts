@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   
   // The default redirect fallback is the home page
-  // But for InternConnect, we redirect to /profile/location to continue onboarding
+  // But for InternAid, we redirect to /profile/location to continue onboarding
   const next = searchParams.get('next') ?? '/profile/location'
 
   if (code) {

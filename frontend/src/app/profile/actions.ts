@@ -79,7 +79,7 @@ export async function updateProfile(rawData: any) {
     try {
       const query = encodeURIComponent(`${profileData.town_city}, ${district_name}, ${region_name}, Ghana`);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
-        headers: { 'User-Agent': 'InternConnect-App/1.0' }
+        headers: { 'User-Agent': 'InternAid-App/1.0' }
       });
       const geocode = await res.json();
       if (geocode && geocode.length > 0) {

@@ -304,7 +304,7 @@ export default function SignupPage() {
             )}
           </AnimatePresence>
           <h1 className="heading-lg text-ink mb-1">Create your account</h1>
-          <p className="body-md text-ink-mute mb-8">Join InternConnect to find your placement.</p>
+          <p className="body-md text-ink-mute mb-8">Join InternAid to find your placement.</p>
 
           {errorMessage && (
             <motion.div

@@ -50,7 +50,7 @@ export default function OnboardingPage() {
           <div className="w-6 h-6 rounded-full bg-[var(--ink)] flex items-center justify-center text-white shrink-0">
             <MapPin className="w-3 h-3" />
           </div>
-          <span className="font-semibold text-[15px] text-[var(--ink)] tracking-tight pr-2">InternConnect</span>
+          <span className="font-semibold text-[15px] text-[var(--ink)] tracking-tight pr-2">InternAid</span>
         </div>
         <div className="flex items-center gap-4 md:gap-6 bg-white/80 backdrop-blur-md px-2 py-2 rounded-full border border-[var(--hairline)]">
           <Link href="/auth/signin" className="hidden md:block text-[var(--ink)] font-medium text-[14px] hover:text-[var(--primary)] transition-colors px-3">
