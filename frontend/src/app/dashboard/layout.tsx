@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { LogOut, HelpCircle, Settings, Bell, Menu, X, Home, Search, FileText, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, HelpCircle, Settings, Bell, Menu, X, Home, Search, FileText, User, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const tabs = [
@@ -55,8 +55,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile Top Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-canvas border-b border-hairline px-4 flex items-center justify-between z-40">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-            IC
+          <div className="w-8 h-8 rounded-full bg-[var(--ink)] flex items-center justify-center text-white shrink-0 shadow-sm">
+            <MapPin className="w-4 h-4" />
           </div>
           <span className="text-[15px] font-semibold text-ink">
             InternAid
@@ -84,8 +84,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Sidebar Header */}
         <div className={`h-16 flex items-center border-b border-hairline ${isCollapsed && !mobileMenuOpen ? 'justify-center px-0' : 'justify-between px-6'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-              IC
+            <div className="w-8 h-8 rounded-full bg-[var(--ink)] flex items-center justify-center text-white shrink-0 shadow-sm">
+              <MapPin className="w-4 h-4" />
             </div>
             {(!isCollapsed || mobileMenuOpen) && (
               <span className="text-[15px] font-semibold text-ink tracking-tight animate-in fade-in">

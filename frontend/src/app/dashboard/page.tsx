@@ -589,13 +589,12 @@ function DashboardContent() {
             <div className={`transition-opacity duration-700 ${!hasMetMinimum ? 'opacity-30 select-none pointer-events-none blur-[4px]' : ''}`}>
               <div className="p-4 sm:p-6 border-b border-[var(--hairline)]">
                 <h2 className="heading-md text-[var(--ink)]">Document Readiness</h2>
-                <p className="caption text-[var(--ink-mute)] mt-1">Required files for your target schools.</p>
+                <p className="caption text-[var(--ink-mute)] mt-1">Optional documents for your applications.</p>
               </div>
               <div className="divide-y divide-[var(--hairline)]">
                 {[
                   { doc: "Curriculum Vitae", verified: docStatus.cv, icon: FileText },
-                  { doc: "Placement Letter", verified: docStatus.placementLetter, icon: CheckCircle },
-                  { doc: "Academic Transcript", verified: docStatus.transcript, icon: Clock }
+                  { doc: "Placement Letter", verified: docStatus.placementLetter, icon: CheckCircle }
                 ].map((item, idx) => (
                   <div key={idx} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[var(--canvas-soft)]/50 transition-colors">
                     <div className="flex items-start sm:items-center gap-4 min-w-0">

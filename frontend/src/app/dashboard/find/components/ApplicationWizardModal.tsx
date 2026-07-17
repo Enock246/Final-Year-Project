@@ -39,7 +39,6 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
   const [isEditingDocs, setIsEditingDocs] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
-  const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
   const [placementFile, setPlacementFile] = useState<File | null>(null);
 
   const supabase = createClient();
@@ -69,7 +68,6 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
       setSendChecklist([false, false, false, false]);
       setSendError(null);
       setCvFile(null);
-      setTranscriptFile(null);
       setPlacementFile(null);
       
       // Load draft from localStorage
@@ -149,7 +147,6 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
       const paths: Record<string, string> = {};
       const uploads = [
         { file: cvFile, type: 'cv' },
-        { file: transcriptFile, type: 'transcript' },
         { file: placementFile, type: 'placement' }
       ];
 
@@ -529,7 +526,6 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                         <button 
                           onClick={() => {
                             setCvFile(null);
-                            setTranscriptFile(null);
                             setPlacementFile(null);
                             setIsEditingDocs(true);
                           }}
@@ -551,10 +547,6 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                             <input type="file" onChange={(e) => setCvFile(e.target.files?.[0] || null)} className="w-full text-[13px] text-[var(--ink-mute)] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[13px] file:font-semibold file:bg-[var(--primary)] file:text-white hover:file:bg-[var(--primary-deep)]" accept=".pdf,.doc,.docx" />
                           </div>
                           <div className="p-4 border border-[var(--hairline)] rounded-xl bg-[var(--canvas-soft)]">
-                            <label className="block text-[14px] font-medium text-[var(--ink)] mb-2">Academic Transcript</label>
-                            <input type="file" onChange={(e) => setTranscriptFile(e.target.files?.[0] || null)} className="w-full text-[13px] text-[var(--ink-mute)] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[13px] file:font-semibold file:bg-[var(--primary)] file:text-white hover:file:bg-[var(--primary-deep)]" accept=".pdf,.doc,.docx" />
-                          </div>
-                          <div className="p-4 border border-[var(--hairline)] rounded-xl bg-[var(--canvas-soft)]">
                             <label className="block text-[14px] font-medium text-[var(--ink)] mb-2">Placement Letter (Optional)</label>
                             <input type="file" onChange={(e) => setPlacementFile(e.target.files?.[0] || null)} className="w-full text-[13px] text-[var(--ink-mute)] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[13px] file:font-semibold file:bg-[var(--primary)] file:text-white hover:file:bg-[var(--primary-deep)]" accept=".pdf,.doc,.docx" />
                           </div>
@@ -562,7 +554,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                         <div className="flex items-center gap-3 pt-2">
                           <button 
                             onClick={handleSaveDocs}
-                            disabled={uploadingDocs || (!cvFile && !transcriptFile && !placementFile)}
+                            disabled={uploadingDocs || (!cvFile && !placementFile)}
                             className="px-6 py-2 bg-[var(--primary)] text-white text-[14px] font-medium rounded-lg flex items-center gap-2 hover:bg-[var(--primary-deep)] disabled:opacity-50 transition-colors"
                           >
                             {uploadingDocs ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upload & Save'}
@@ -578,15 +570,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {(!studentProfile?.cv_file_path || !studentProfile?.transcript_file_path) && (
-                          <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
-                            <FileText className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-[13px] font-medium text-orange-800">Missing Documents</p>
-                              <p className="text-[12px] text-orange-600 mt-0.5">You haven't uploaded all required documents yet. We highly recommend adding your CV and Transcript before applying.</p>
-                            </div>
-                          </div>
-                        )}
+
                         
                         <div className={`flex items-center gap-3 p-3 rounded-xl border ${studentProfile?.cv_file_path ? 'bg-[var(--canvas-soft)] border-[var(--hairline)]' : 'bg-white border-dashed border-gray-300'}`}>
                           <FileText className={`w-5 h-5 ${studentProfile?.cv_file_path ? 'text-[var(--primary)]' : 'text-gray-400'}`} />
@@ -596,14 +580,7 @@ export default function ApplicationWizardModal({ isOpen, onClose, school, hasApp
                           </div>
                           {studentProfile?.cv_file_path ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" /> : <span className="text-[12px] text-gray-400 ml-auto font-medium tracking-wide uppercase shrink-0">Missing</span>}
                         </div>
-                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${studentProfile?.transcript_file_path ? 'bg-[var(--canvas-soft)] border-[var(--hairline)]' : 'bg-white border-dashed border-gray-300'}`}>
-                          <FileText className={`w-5 h-5 ${studentProfile?.transcript_file_path ? 'text-[var(--primary)]' : 'text-gray-400'}`} />
-                          <div className="flex flex-col">
-                            <span className={`text-[14px] font-medium ${studentProfile?.transcript_file_path ? 'text-[var(--ink)]' : 'text-gray-500'}`}>Academic Transcript</span>
-                            {studentProfile?.transcript_file_path && <span className="text-[12px] text-gray-500 truncate max-w-[200px]">{formatFileName(studentProfile.transcript_file_path)}</span>}
-                          </div>
-                          {studentProfile?.transcript_file_path ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" /> : <span className="text-[12px] text-gray-400 ml-auto font-medium tracking-wide uppercase shrink-0">Missing</span>}
-                        </div>
+
                         {studentProfile?.placement_letter_path && (
                           <div className="flex items-center gap-3 p-3 rounded-xl border bg-[var(--canvas-soft)] border-[var(--hairline)]">
                             <FileText className="w-5 h-5 text-[var(--primary)]" />

@@ -32,23 +32,6 @@ export default function InboxMessageDrawer({ message, onClose, isOpen }: { messa
 
   const { heading, body } = parseMessageContent(message);
 
-  const handleUpdateStatus = async (newStatus: 'ACCEPTED' | 'REJECTED') => {
-    if (!message.application_id) return;
-    setIsUpdating(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('applications')
-      .update({ status: newStatus })
-      .eq('id', message.application_id);
-    
-    setIsUpdating(false);
-    if (!error) {
-      onClose();
-      window.location.reload(); // Refresh dashboard to update analytics funnel
-    } else {
-      alert('Failed to update status. Please try again.');
-    }
-  };
 
   return (
     <>
@@ -87,27 +70,8 @@ export default function InboxMessageDrawer({ message, onClose, isOpen }: { messa
         </div>
         
         <div className="p-6 border-t border-[var(--hairline)] bg-white space-y-3">
-          {message.application_id && (
-            <div className="flex gap-3 w-full">
-              <button 
-                onClick={() => handleUpdateStatus('ACCEPTED')}
-                disabled={isUpdating}
-                className="flex-1 py-3 rounded-xl bg-[var(--success)] text-white hover:opacity-90 transition-opacity font-semibold text-[14px] disabled:opacity-50"
-              >
-                {isUpdating ? 'Updating...' : 'I was Accepted! 🎉'}
-              </button>
-              <button 
-                onClick={() => handleUpdateStatus('REJECTED')}
-                disabled={isUpdating}
-                className="flex-1 py-3 rounded-xl bg-[var(--warning)] text-white hover:opacity-90 transition-opacity font-semibold text-[14px] disabled:opacity-50"
-              >
-                {isUpdating ? 'Updating...' : 'I was Rejected 😔'}
-              </button>
-            </div>
-          )}
           <button 
             onClick={onClose}
-            disabled={isUpdating}
             className="w-full py-3 rounded-xl border border-[var(--hairline)] bg-white hover:bg-[var(--canvas-soft)] transition-colors font-semibold text-[var(--ink)] text-[14px]"
           >
             Close Message

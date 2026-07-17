@@ -6,7 +6,7 @@ import { Upload, FileText, CheckCircle2, File, Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { completeProfile } from '@/app/profile/actions';
 
-type DocumentType = 'cv' | 'transcript' | 'placement';
+type DocumentType = 'cv' | 'placement';
 
 interface UploadedDoc {
   file: File;
@@ -24,7 +24,6 @@ export default function DocumentsTab({ initialData }: { initialData: any }) {
 
   const [docs, setDocs] = useState<Record<DocumentType, UploadedDoc | null>>({
     cv: null,
-    transcript: null,
     placement: null,
   });
 
@@ -34,9 +33,6 @@ export default function DocumentsTab({ initialData }: { initialData: any }) {
         const newDocs = { ...prev };
         if (initialData.cv_file_path) {
           newDocs.cv = { file: new window.File([], 'cv.pdf'), name: 'Current CV', size: 1000, isProcessing: false, alreadyUploaded: true };
-        }
-        if (initialData.transcript_file_path) {
-          newDocs.transcript = { file: new window.File([], 'transcript.pdf'), name: 'Current Transcript', size: 1000, isProcessing: false, alreadyUploaded: true };
         }
         if (initialData.placement_letter_path) {
           newDocs.placement = { file: new window.File([], 'placement.pdf'), name: 'Current Placement Letter', size: 1000, isProcessing: false, alreadyUploaded: true };
@@ -48,7 +44,6 @@ export default function DocumentsTab({ initialData }: { initialData: any }) {
 
   const fileInputRefs = {
     cv: useRef<HTMLInputElement>(null),
-    transcript: useRef<HTMLInputElement>(null),
     placement: useRef<HTMLInputElement>(null),
   };
 
@@ -104,7 +99,7 @@ export default function DocumentsTab({ initialData }: { initialData: any }) {
     try {
       const paths: Record<string, string> = {};
       
-      for (const type of ['cv', 'transcript', 'placement'] as DocumentType[]) {
+      for (const type of ['cv', 'placement'] as DocumentType[]) {
         const doc = docs[type];
         // If it's a new file (not already uploaded)
         if (doc && !doc.isProcessing && !doc.alreadyUploaded) {
@@ -245,12 +240,11 @@ export default function DocumentsTab({ initialData }: { initialData: any }) {
     <div>
       <h2 className="heading-md mb-6">Documents</h2>
       <p className="body-md text-ink-mute mb-8 max-w-2xl">
-        Upload or replace your CV, academic transcripts, and placement letters. Files must be PDF or Word format and under 5MB.
+        Upload or replace your CV and placement letters. Files must be PDF or Word format and under 5MB.
       </p>
 
       <div className="space-y-4 max-w-2xl">
-        <FileUploadBox title="Curriculum Vitae (CV)" type="cv" isRequired={true} icon={FileText} />
-        <FileUploadBox title="Academic Transcripts" type="transcript" isRequired={true} icon={File} />
+        <FileUploadBox title="Curriculum Vitae (CV)" type="cv" isRequired={false} icon={FileText} />
         <FileUploadBox title="Placement Letter" type="placement" isRequired={false} icon={FileText} />
         
         <div className="pt-6">
