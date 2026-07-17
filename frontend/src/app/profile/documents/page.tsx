@@ -6,7 +6,7 @@ import { Upload, FileText, CheckCircle2, File, Loader2, ArrowRight, ArrowLeft, X
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
-type DocumentType = 'cv' | 'transcript' | 'placement';
+type DocumentType = 'cv' | 'placement';
 
 interface UploadedDoc {
   file: File;
@@ -24,7 +24,6 @@ export default function DocumentsSetupPage() {
   
   const [docs, setDocs] = useState<Record<DocumentType, UploadedDoc | null>>({
     cv: null,
-    transcript: null,
     placement: null,
   });
 
@@ -34,11 +33,11 @@ export default function DocumentsSetupPage() {
       if (user) {
         const { data } = await supabase
           .from('student_profiles')
-          .select('cv_file_path, transcript_file_path, placement_letter_path')
+          .select('cv_file_path, placement_letter_path')
           .eq('student_id', user.id)
           .single();
 
-        if (data && (data.cv_file_path || data.transcript_file_path || data.placement_letter_path)) {
+        if (data && (data.cv_file_path || data.placement_letter_path)) {
           // If they already have documents, hide the prompt
           setShowPrompt(false);
           
@@ -46,9 +45,6 @@ export default function DocumentsSetupPage() {
             const newDocs = { ...prev };
             if (data.cv_file_path) {
               newDocs.cv = { file: new window.File([], 'cv.pdf'), name: 'Previously Uploaded CV', size: 1000, isProcessing: false, alreadyUploaded: true };
-            }
-            if (data.transcript_file_path) {
-              newDocs.transcript = { file: new window.File([], 'transcript.pdf'), name: 'Previously Uploaded Transcript', size: 1000, isProcessing: false, alreadyUploaded: true };
             }
             if (data.placement_letter_path) {
               newDocs.placement = { file: new window.File([], 'placement.pdf'), name: 'Previously Uploaded Placement Letter', size: 1000, isProcessing: false, alreadyUploaded: true };
@@ -66,7 +62,6 @@ export default function DocumentsSetupPage() {
 
   const fileInputRefs = {
     cv: useRef<HTMLInputElement>(null),
-    transcript: useRef<HTMLInputElement>(null),
     placement: useRef<HTMLInputElement>(null),
   };
 
@@ -146,7 +141,7 @@ export default function DocumentsSetupPage() {
       
       // If we are not skipping, we upload the files
       if (!skipped) {
-        for (const type of ['cv', 'transcript', 'placement'] as DocumentType[]) {
+        for (const type of ['cv', 'placement'] as DocumentType[]) {
           const doc = docs[type];
           if (doc && !doc.isProcessing) {
             if (doc.alreadyUploaded) {
@@ -216,8 +211,8 @@ export default function DocumentsSetupPage() {
     }
   };
 
-  const isValid = docs.cv !== null && !docs.cv.isProcessing && 
-                  docs.transcript !== null && !docs.transcript.isProcessing;
+  const isValid = (!docs.cv || !docs.cv.isProcessing) && 
+                  (!docs.placement || !docs.placement.isProcessing);
 
   const cardClassName = "w-full bg-canvas p-6 md:p-8 md:rounded-lg md:shadow-none border border-hairline md:border md:border-hairline flex-1 flex flex-col relative";
 
@@ -441,14 +436,8 @@ export default function DocumentsSetupPage() {
             <FileUploadBox 
               title="Curriculum Vitae (CV)" 
               type="cv" 
-              isRequired={true} 
+              isRequired={false} 
               icon={FileText} 
-            />
-            <FileUploadBox 
-              title="Academic Transcripts" 
-              type="transcript" 
-              isRequired={true} 
-              icon={File} 
             />
             <FileUploadBox 
               title="Placement Letter" 
@@ -472,7 +461,7 @@ export default function DocumentsSetupPage() {
           <div className="mt-8 pt-6 z-10">
             <div className="flex items-center justify-between mb-3">
               <span className="caption text-ruby min-h-[20px] transition-opacity">
-                {!isValid ? "Please upload the required documents to continue." : ""}
+                {!isValid ? "Please wait for files to finish uploading." : ""}
               </span>
             </div>
             <button

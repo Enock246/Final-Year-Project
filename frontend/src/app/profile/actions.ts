@@ -15,7 +15,6 @@ const profileSchema = z.object({
   university_programme: z.string().optional(),
   key_skills_and_offerings: z.array(z.string()).optional(),
   cv_file_path: z.string().optional(),
-  transcript_file_path: z.string().optional(),
   placement_letter_path: z.string().optional(),
 }).strip();
 
