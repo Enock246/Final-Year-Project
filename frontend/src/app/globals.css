@@ -71,6 +71,37 @@
     --success: #2E7D32;
     --warning: #FFBD35;
   }
+
+  .dark {
+    --primary: #609cff;
+    --primary-deep: #3279F9;
+    --primary-press: #2563eb;
+    --primary-soft: #609cff;
+    --primary-bg-subdued-hover: rgba(96, 156, 255, 0.15);
+    
+    --brand-dark-900: #121317;
+    
+    --ink: #ffffff;
+    --ink-secondary: #e2e8f0;
+    --ink-mute: #94a3b8;
+    --ink-mute-2: #64748b;
+    
+    --on-primary: #ffffff;
+    --canvas: #0b0e14;
+    --canvas-soft: #12151e;
+    --canvas-soft-2: #161b26;
+    --canvas-cream: #1e2536;
+    
+    --hairline: #1e293b;
+    --hairline-input: #334155;
+    
+    --ruby: #ef4444;
+    --magenta: #e879f9;
+    --lemon: #fbbf24;
+    --shadow-blue: #000000;
+    --success: #22c55e;
+    --warning: #f59e0b;
+  }
 }
 
 @layer base {

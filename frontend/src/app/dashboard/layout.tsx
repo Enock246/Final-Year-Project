@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { LogOut, HelpCircle, Settings, Bell, Menu, X, Home, Search, FileText, User, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const tabs = [
   { name: 'Overview', href: '/dashboard', icon: Home },
@@ -62,12 +63,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             InternAid
           </span>
         </div>
-        <button 
-          onClick={() => setMobileMenuOpen(true)}
-          className="w-10 h-10 flex items-center justify-center text-ink-mute hover:bg-canvas-soft rounded-full transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button 
+            onClick={() => setMobileMenuOpen(true)}
+            className="w-10 h-10 flex items-center justify-center text-ink-mute hover:bg-canvas-soft rounded-full transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Sidebar Overlay (Mobile) */}
@@ -180,7 +184,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className={`flex-1 flex flex-col min-h-screen min-w-0 pt-16 md:pt-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-[72px]' : 'md:ml-64'}`}>
         
         {/* Desktop Top Bar */}
-        <header className="hidden md:flex h-16 border-b border-hairline bg-canvas/80 backdrop-blur-md items-center justify-end px-8 sticky top-0 z-30">
+        <header className="hidden md:flex h-16 border-b border-hairline bg-canvas/80 backdrop-blur-md items-center justify-end px-8 sticky top-0 z-30 gap-3">
+          <ThemeToggle />
           <button className="w-10 h-10 rounded-full hover:bg-canvas-soft flex items-center justify-center text-ink-mute transition-colors relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-ruby border-2 border-canvas"></span>
